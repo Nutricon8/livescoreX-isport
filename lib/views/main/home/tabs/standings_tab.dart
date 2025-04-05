@@ -1,85 +1,144 @@
 import 'package:flutter/material.dart';
+import 'package:livescore_x/utils/api_service.dart';
+import 'package:livescore_x/utils/models/standing.dart';
 
-class StandingsTab extends StatelessWidget {
+import '../../../../widgets/standing_card.dart';
+
+class StandingsTab extends StatefulWidget {
+  final int homeTeamId;
+  final int awayTeamId;
+  final int leagueId;
+
+  const StandingsTab({
+    this.homeTeamId = 0,
+    this.awayTeamId = 0,
+    this.leagueId = 0,
+    super.key,
+  });
+
+  @override
+  _StandingsTabState createState() => _StandingsTabState();
+}
+
+class _StandingsTabState extends State<StandingsTab> {
+  @override
+  bool get wantKeepAlive => true; // Keep widget alive
+  late Future<List<Standing>> futureStandings;
+  @override
+  void initState() {
+    super.initState();
+    futureStandings = ApiService().getStandings(widget.leagueId);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.hardEdge,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0),
-      child: ListView.builder(
-        itemCount: 12,
-        itemBuilder: (context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // Align title to the left
+        children: [
+          ListTile(
+            horizontalTitleGap: 8,
+            minLeadingWidth: 0,
+            contentPadding: const EdgeInsets.only(left: 12.0, right: 4),
+            leading: Text(
+              '#',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+            ),
+            title: Text(
+              'Team',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+            ),
+
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    _buildStatText('M'),
+                    _buildStatText('W'),
+                    _buildStatText('D'),
+                    _buildStatText('L'),
+                  ],
+                ),
+                const SizedBox(width: 4), // Adds spacing
+                SizedBox(
+                  width: 20, // Set a fixed width for consistency
+                  child: Text(
+                    'GD',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'PTS',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
-            child: StandingsCard(
-              index + 1,
-              'Team ${index + 1}',
-              30,
-              18,
-              6,
-              6,
-              60,
+          ),
+
+          // Standings ListView
+          Expanded(
+            child: FutureBuilder<List<Standing>>(
+              future: futureStandings,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text('An error occured while fetching standings'),
+                  );
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('No standings available'));
+                } else {
+                  final standingsList = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: standingsList.length,
+                    itemBuilder: (context, index) {
+                      final standing = standingsList[index];
+                      return StandingsCard(
+                        position: standing.position,
+                        team: standing.team,
+                        crest: standing.crest,
+                        played: standing.played,
+                        won: standing.won,
+                        drawn: standing.drawn,
+                        lost: standing.lost,
+                        goalDifference: standing.goalDifference,
+                        points: standing.points,
+                        playing:
+                            (standing.id == widget.homeTeamId) ||
+                            (standing.id == widget.awayTeamId),
+                      );
+                    },
+                  );
+                }
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 }
 
-Widget StandingsCard(int position, String team, int played, int won, int drawn, int lost, int points) {
-  return Card(
-    margin: EdgeInsets.zero,
-    clipBehavior: Clip.hardEdge,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4.0),
-    ),
-    child: Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(width: 1.0),
-        ),
-      ),
-      child: ListTile(
-        horizontalTitleGap: 16,
-        minLeadingWidth: 1,
-        leading: Text('$position'),
-        title: Row(
-          children: [
-            Image.asset(
-              "assets/liverpool.png",
-              height: 30,
-              width: 30,
-            ),
-            SizedBox(width: 4),
-            Text(
-              team,
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-        trailing: Text(
-          '$played $won $drawn $lost $points',
-          style: TextStyle(
-            fontSize: 16,
-          ),
-        ),
-      ),
+Widget _buildStatText(String value) {
+  return SizedBox(
+    width: 20, // Set a fixed width for consistency
+    child: Text(
+      value,
+      textAlign: TextAlign.center,
+      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
     ),
   );
 }

@@ -1,56 +1,249 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:ui';
+
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:live_score_ke/utils/theme_provider.dart';
-import 'package:live_score_ke/views/main/home/league_details_screen.dart';
-import 'package:live_score_ke/views/main/home/match_details_screen.dart';
-import 'package:live_score_ke/views/main/profile_screen.dart';
-import 'package:live_score_ke/views/main/settings_screen.dart';
-import 'package:live_score_ke/views/main/bottom_nav.dart';
-import 'package:live_score_ke/views/onboarding/onboarding_one.dart';
-import 'package:live_score_ke/views/onboarding/onboarding_two.dart';
-import 'package:live_score_ke/views/onboarding/onboarding_three.dart';
-import 'package:live_score_ke/views/onboarding/onboarding_four.dart';
-import 'package:live_score_ke/views/onboarding/sign_in.dart';
-import 'package:live_score_ke/views/onboarding/sign_up.dart';
-import 'package:live_score_ke/utils/colors.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:livescore_x/firebase_options.dart';
+import 'package:livescore_x/utils/ads/app_open.dart';
+import 'package:livescore_x/utils/api_service.dart';
+import 'package:livescore_x/utils/colors.dart';
+import 'package:livescore_x/utils/models/league.dart';
+import 'package:livescore_x/utils/models/match.dart';
+import 'package:livescore_x/utils/models/team.dart';
+import 'package:livescore_x/utils/notification_manager.dart';
+import 'package:livescore_x/utils/theme_provider.dart';
+import 'package:livescore_x/views/main/bottom_nav.dart';
+import 'package:livescore_x/views/main/home/live_match_details.dart';
+import 'package:livescore_x/views/main/settings_screen.dart';
+import 'package:livescore_x/views/onboarding/onboarding_four.dart';
+import 'package:livescore_x/views/onboarding/onboarding_one.dart';
+import 'package:livescore_x/views/onboarding/onboarding_three.dart';
+import 'package:livescore_x/views/onboarding/sign_in_screen.dart';
+import 'package:livescore_x/views/onboarding/sign_up_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const String taskKey = "fetch_shared_prefs_task";
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+bool isServiceRunning = false; // Flag to track if the service is running
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final themeMode = await ThemeProvider.getThemeMode();
-  runApp(MyApp(themeMode: themeMode));
+  MobileAds.instance.initialize();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Request permission from the user
+  bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+  if (!isAllowed) {
+    await AwesomeNotifications().requestPermissionToSendNotifications();
+  }
+
+  //await initializeBackgroundService();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: AppInitializer(),
+    ),
+  );
+}
+
+Future<void> initializeBackgroundService() async {
+  final service = FlutterBackgroundService();
+
+  await service.configure(
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStart,
+      autoStart: true,
+      isForegroundMode: true,
+      notificationChannelId: "notifications_channel",
+      initialNotificationTitle: "Match Updates Running",
+      initialNotificationContent: "Fetching match updates in background",
+    ),
+    iosConfiguration: IosConfiguration(
+      onForeground: onStart,
+      onBackground: onIosBackground, // Updated function reference
+    ),
+  );
+
+  service.startService();
+}
+
+// Fix for iOS onBackground function
+Future<bool> onIosBackground(ServiceInstance service) async {
+  // This ensures the background task can still run on iOS
+  return true;
+}
+
+void onStart(ServiceInstance service) async {
+  // Use this for background isolate
+  DartPluginRegistrant.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+  bool notificationsEnabled = prefs.getBool('notificationsEnabled') ?? false;
+
+  if (notificationsEnabled) {
+    // 🧠 Set as foreground service (important to keep it alive!)
+    if (service is AndroidServiceInstance) {
+      service.setAsForegroundService();
+      service.setForegroundNotificationInfo(
+        title: "Match Updates Running",
+        content: "Monitoring live scores in the background",
+      );
+    }
+
+    // Trigger the task immediately
+    service.invoke('checkMatchUpdates');
+
+    // Listen for custom invoke calls
+    service.on('checkMatchUpdates').listen((event) async {
+      List<Match> liveMatches = await ApiService().getLiveMatches();
+      await checkMatchUpdates(liveMatches);
+    });
+
+    isServiceRunning = true;
+    run15SecondTask();
+
+    service.on('stopService').listen((event) {
+      isServiceRunning = false;
+      service.stopSelf();
+    });
+  }
+}
+
+Future<void> run15SecondTask() async {
+  while (isServiceRunning) {
+    try {
+      List<Match> liveMatches = await ApiService().getLiveMatches();
+      await checkMatchUpdates(liveMatches);
+    } catch (e) {
+      return;
+    }
+    await Future.delayed(Duration(seconds: 10));
+  }
 }
 
 class MyApp extends StatefulWidget {
-  final ThemeMode themeMode;
-  const MyApp({Key? key, required this.themeMode}) : super(key: key);
+  final bool isFirstLaunch;
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
+  const MyApp({required this.isFirstLaunch});
   @override
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  late ThemeMode _themeMode;
-
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    _themeMode = widget.themeMode;
+    WidgetsBinding.instance.addObserver(this);
+    AppOpenAdManager.loadAd();
+
+    AwesomeNotifications().initialize(null, [
+      NotificationChannel(
+        channelKey: 'notifications_channel',
+        channelName: 'Match Alerts',
+        channelDescription: 'Notifications for favorite matches',
+        defaultColor: ColorScheme.of(context).primary,
+        ledColor: ColorScheme.of(context).primary,
+        importance: NotificationImportance.Max,
+        playSound: false,
+      ),
+    ]);
+
+    // Setup the listener
+    AwesomeNotifications().setListeners(
+      onActionReceivedMethod: (receivedAction) async {
+        // Handle navigation based on notification tap
+        if (receivedAction.buttonKeyPressed == 'open_app') {
+          // Navigate to the main app screen
+        } else if (receivedAction.buttonKeyPressed == 'view_match') {
+          String? matchJson = receivedAction.payload?['match'];
+
+          if (matchJson != null) {
+            Map<String, dynamic> matchMap = jsonDecode(
+              matchJson,
+            ); // Convert JSON string to Map
+
+            // Manually reconstruct the Match object
+            Match match = Match(
+              league: League(
+                id: matchMap['league']['id'],
+                name: matchMap['league']['name'],
+                image: matchMap['league']['image'],
+                country: matchMap['league']['country'],
+                countryFlag: matchMap['league']['countryFlag'],
+              ),
+              id: matchMap['id'],
+              home: Team(
+                id: matchMap['home']['id'],
+                name: matchMap['home']['name'],
+                image: matchMap['home']['image'],
+              ),
+              away: Team(
+                id: matchMap['away']['id'],
+                name: matchMap['away']['name'],
+                image: matchMap['away']['image'],
+              ),
+              homeScore: matchMap['homeScore'],
+              awayScore: matchMap['awayScore'],
+              date: matchMap['date'],
+              elapsed: matchMap['elapsed'],
+              short: matchMap['short'],
+              halftimeScore: matchMap['halftimeScore'],
+              extra: matchMap['extra'], // Include extra field
+            );
+
+            // Use a global navigator key to access the context
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => LiveMatchDetails(match: match),
+              ),
+            );
+          }
+        }
+      },
+      onNotificationCreatedMethod: (receivedNotification) async {},
+      onNotificationDisplayedMethod: (receivedNotification) async {},
+      onDismissActionReceivedMethod: (receivedAction) async {},
+    );
   }
 
-  Future<void> toggleTheme() async {
-    setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    });
-    await ThemeProvider.setThemeMode(_themeMode);
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App is active again
+      AppOpenAdManager.showAdIfAvailable(); // Show the ad when returning
+    } else if (state == AppLifecycleState.paused) {
+      // App moved to the background
+    } else if (state == AppLifecycleState.detached) {
+      // App is terminating
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Livescore App',
-      themeMode: _themeMode,
-
+      title: 'LivescoreX',
+      themeMode:
+          Provider.of<ThemeProvider>(context).isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
+      navigatorKey: MyApp.navigatorKey,
+      // 👇 Apply SafeArea globally using the builder
+      builder: (context, child) {
+        return SafeArea(child: child ?? const SizedBox.shrink());
+      },
       // Light Theme
       theme: ThemeData(
         useMaterial3: true,
@@ -65,7 +258,7 @@ class _MyAppState extends State<MyApp> {
             foregroundColor: lightColorScheme.surface,
             padding: EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             minimumSize: Size(double.infinity, 48),
             //textStyle: TextStyle(color: lightColorScheme.surface, fontSize: 16),
@@ -77,7 +270,7 @@ class _MyAppState extends State<MyApp> {
             foregroundColor: lightColorScheme.primary,
             padding: EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             minimumSize: Size(double.infinity, 48),
             side: BorderSide(color: lightColorScheme.primary),
@@ -85,7 +278,9 @@ class _MyAppState extends State<MyApp> {
         ),
 
         textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: Colors.blue),
+          style: TextButton.styleFrom(
+            foregroundColor: lightColorScheme.onSurface,
+          ),
         ),
 
         inputDecorationTheme: InputDecorationTheme(
@@ -182,11 +377,7 @@ class _MyAppState extends State<MyApp> {
             color: lightColorScheme.onSurface,
             fontSize: 20,
           ),
-          iconTheme: IconThemeData(color: lightColorScheme.onSurface),
-        ),
-        bottomAppBarTheme: BottomAppBarTheme(
-          elevation: 10,
-          color: lightColorScheme.surface,
+          iconTheme: IconThemeData(color: lightColorScheme.onSurface, size: 24),
         ),
 
         cardTheme: CardTheme(
@@ -195,9 +386,15 @@ class _MyAppState extends State<MyApp> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
-          shadowColor: darkColorScheme.onSecondary,
+          shadowColor: lightColorScheme.onSecondary,
         ),
-
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: lightColorScheme.surface,
+          selectedItemColor: lightColorScheme.primary,
+          unselectedItemColor: lightColorScheme.onSurface,
+          elevation: 10,
+          type: BottomNavigationBarType.fixed,
+        ),
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: ZoomPageTransitionsBuilder(),
@@ -219,7 +416,7 @@ class _MyAppState extends State<MyApp> {
             foregroundColor: lightColorScheme.surface,
             padding: EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             minimumSize: Size(double.infinity, 48),
             textStyle: TextStyle(color: darkColorScheme.surface, fontSize: 16),
@@ -231,10 +428,16 @@ class _MyAppState extends State<MyApp> {
             foregroundColor: darkColorScheme.primary,
             padding: EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             minimumSize: Size(double.infinity, 48),
             side: BorderSide(color: darkColorScheme.primary),
+          ),
+        ),
+
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: darkColorScheme.onSurface,
           ),
         ),
 
@@ -341,9 +544,27 @@ class _MyAppState extends State<MyApp> {
           shadowColor: darkColorScheme.onSecondary,
         ),
 
-        bottomAppBarTheme: BottomAppBarTheme(
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: darkColorScheme.surface,
+          selectedItemColor: darkColorScheme.primary,
+          unselectedItemColor: darkColorScheme.onSurface,
           elevation: 10,
-          color: darkColorScheme.surface,
+          type: BottomNavigationBarType.fixed,
+        ),
+
+        bottomSheetTheme: BottomSheetThemeData(
+          backgroundColor: Colors.white, // Background color of the sheet
+          elevation: 8.0, // Shadow effect
+          modalBackgroundColor:
+              Colors.grey[200], // Background color for modal bottom sheets
+          modalElevation: 10.0, // Elevation for modal sheets
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(20),
+            ), // Rounded corners
+          ),
+          clipBehavior: Clip.antiAlias, // Ensures smooth clipping
+          shadowColor: Colors.black54, // Shadow color
         ),
 
         pageTransitionsTheme: const PageTransitionsTheme(
@@ -354,20 +575,63 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
 
-      // Define named routes
-      initialRoute: '/',
-      routes: {
-        '/': (context) => OnboardingOne(),
-        '/two': (context) => OnboardingTwo(),
-        '/three': (context) => OnboardingThree(),
-        '/four': (context) => OnboardingFour(),
-        '/register': (context) => SignUpScreen(),
-        '/login': (context) => SignInScreen(),
-        '/main': (context) => BottomNavScreen(startIndex: 0),
-        '/match': (context) => MatchDetailsScreen(),
-        '/league': (context) => LeagueDetailsScreen(),
-        '/profile': (context) => ProfileScreen(),
-        '/settings': (context) => SettingsScreen(toggleTheme: toggleTheme),
+      initialRoute:
+          widget.isFirstLaunch ? '/' : '/main', // Dynamic initial route
+
+      onGenerateRoute: (settings) {
+        Widget page;
+
+        switch (settings.name) {
+          case '/':
+            page = OnboardingOne();
+            break;
+          case '/three':
+            page = OnboardingThree();
+            break;
+          case '/four':
+            page = OnboardingFour();
+            break;
+          case '/register':
+            page = SignUpScreen();
+            break;
+          case '/login':
+            page = SignInScreen();
+            break;
+          case '/main':
+            page = BottomNavScreen(startIndex: 0);
+            break;
+          case '/settings':
+            page = SettingsScreen();
+            break;
+          default:
+            page = OnboardingOne();
+        }
+
+        return MaterialPageRoute(builder: (context) => page);
+      },
+    );
+  }
+}
+
+class AppInitializer extends StatelessWidget {
+  Future<bool> _checkFirstLaunch() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool firstLaunch = prefs.getBool('firstLaunch') ?? true;
+    if (firstLaunch) {
+      await prefs.setBool('firstLaunch', false);
+    }
+    return firstLaunch;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _checkFirstLaunch(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return MyApp(isFirstLaunch: snapshot.data!);
       },
     );
   }

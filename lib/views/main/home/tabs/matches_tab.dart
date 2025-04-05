@@ -1,144 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:livescore_x/utils/ads/banner.dart';
+import 'package:livescore_x/utils/api_service.dart';
+import 'package:livescore_x/utils/models/match.dart';
+import 'package:livescore_x/widgets/match_card.dart';
 
-class MatchesTab extends StatelessWidget {
+class MatchesTab extends StatefulWidget {
+  final Match match;
+
+  const MatchesTab({required this.match, super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.all(8.0),
-      children: [
-        MatchCard('Premier League', '5 Dec 2023', 'Aston Villa', 'Liverpool', '0', '5'),
-        MatchCard('Premier League', '5 Dec 2023', 'Aston Villa', 'Liverpool', '0', '5'),
-        MatchCard('Premier League', '5 Dec 2023', 'Aston Villa', 'Liverpool', '0', '5'),
-      ],
-    );
-  }
+  // ignore: library_private_types_in_public_api
+  _MatchesTabState createState() => _MatchesTabState();
 }
 
-class MatchCard extends StatelessWidget {
-  final String competition;
-  final String date;
-  final String homeTeam;
-  final String awayTeam;
-  final String homeScore;
-  final String awayScore;
+class _MatchesTabState extends State<MatchesTab> {
+  List<Match> matches = [];
+  bool isLoading = true;
+  String errorMessage = '';
 
-  const MatchCard(
-    this.competition,
-    this.date,
-    this.homeTeam,
-    this.awayTeam,
-    this.homeScore,
-    this.awayScore, {
-    Key? key,
-  }) : super(key: key);
+  @override
+  void initState() {
+    super.initState();
+    fetchHeadToHeadMatches();
+  }
+
+  Future<void> fetchHeadToHeadMatches() async {
+    try {
+      List<Match> fetchedMatches = await ApiService().getHeadToHeadMatches(
+        '${widget.match.home.id}-${widget.match.away.id}',
+      );
+
+      setState(() {
+        matches = fetchedMatches;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error fetching matches: $e";
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 117, // Set the custom height here
-      child: Card(
-        //margin: EdgeInsets.zero, // Remove spacing between cards
-        margin: EdgeInsets.symmetric(vertical: 6),
-        clipBehavior: Clip.hardEdge,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // First Row (Competition and Date)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset('assets/liverpool.png', width: 20, height: 16),
-                      const SizedBox(width: 10),
-                      Text(
-                        competition,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    date,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-            // Second Row (Home Team and Score)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset('assets/liverpool.png', width: 20, height: 20),
-                      const SizedBox(width: 10),
-                      Text(
-                        homeTeam,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    homeScore,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    if (errorMessage.isNotEmpty) {
+      return Center(child: Text(errorMessage));
+    }
 
-            // Third Row (Away Team and Score)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset('assets/liverpool.png', width: 20, height: 20),
-                      const SizedBox(width: 10),
-                      Text(
-                        awayTeam,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    awayScore,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    if (matches.isEmpty) {
+      return Center(child: Text("No Head To Head matches Available"));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      itemCount: matches.length,
+      itemBuilder: (context, index) {
+        var match = matches[index];
+        // Show an ad after every 3 matches
+        if (index > 0 && index % 3 == 0) {
+          return BannerAdWidget();
+        }
+        return MatchCard(match: match);
+      },
     );
   }
 }

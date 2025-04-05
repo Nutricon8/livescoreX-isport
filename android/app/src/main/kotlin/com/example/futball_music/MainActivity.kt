@@ -1,4 +1,4 @@
-package com.example.live_score_ke
+package com.livescore_x
 
 import io.flutter.embedding.android.FlutterActivity
 

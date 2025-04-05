@@ -1,23 +1,199 @@
 import 'package:flutter/material.dart';
-import 'package:live_score_ke/widgets/custom_drawer.dart';
+import 'package:intl/intl.dart';
+import 'package:livescore_x/utils/ads/banner.dart';
+import 'package:livescore_x/utils/ads/interstitial.dart';
+import 'package:livescore_x/utils/api_service.dart';
+import 'package:livescore_x/utils/favorite_matches.dart';
+import 'package:livescore_x/utils/json_leagues.dart';
+import 'package:livescore_x/utils/models/league.dart';
+import 'package:livescore_x/utils/models/match.dart';
+import 'package:livescore_x/widgets/custom_drawer.dart';
+import 'package:livescore_x/widgets/fixture_item.dart';
+import 'package:livescore_x/widgets/league_card.dart';
+import '../../../widgets/DateScrollWidget.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   final Function(int) onItemTapped;
-  HomePage({required this.onItemTapped});
+  const HomePage({super.key, required this.onItemTapped});
+
+  @override
+  HomePageState createState() => HomePageState();
+}
+
+class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  final InterstitialAdHelper adHelper = InterstitialAdHelper();
+  late Map<int, List<Match>> groupedMatches = {};
+
+  int? selectedLeague;
+  List<League> leagues = [];
+  List<int> priorityLeagueIds = [];
+  List<int> favoriteMatchIds = [];
+
+  bool isLoading = true;
+  String selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+  @override
+  void initState() {
+    super.initState();
+    loadLeagueIds().then((ids) {
+      setState(() {
+        priorityLeagueIds = ids;
+      });
+    });
+    Future.microtask(() async {
+      await fetchMatches();
+      adHelper.loadAd();
+    });
+    loadFavoriteMatches();
+  }
+
+  Future<void> loadFavoriteMatches() async {
+    List<Match> matches = await getMatches();
+    setState(() {
+      favoriteMatchIds = matches.map((match) => match.id).toList();
+    });
+  }
+
+  Future<void> toggleFavorite(Match match) async {
+    List<Match> matches = await getMatches();
+    bool isFavorite = favoriteMatchIds.contains(match.id);
+
+    if (isFavorite) {
+      matches.removeWhere((m) => m.id == match.id);
+    } else {
+      matches.add(match);
+    }
+
+    await saveMatches(matches);
+    setState(() {
+      favoriteMatchIds = matches.map((m) => m.id).toList();
+    });
+  }
+
+  void updateLeagues() {
+    setState(() {
+      leagues =
+          groupedMatches.keys
+              .map((leagueId) => groupedMatches[leagueId]!.first.league)
+              .toList();
+    });
+  }
+
+  void filterMatchesByLeague(int? leagueId) {
+    setState(() {
+      selectedLeague = leagueId;
+    });
+  }
+
+  Future<void> fetchMatches() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      List<Match> matches =
+          (await ApiService().getDateFixtures(selectedDate)).cast<Match>();
+      groupMatchesByLeague(matches);
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void groupMatchesByLeague(List<Match> matches) {
+    Map<int, List<Match>> tempGroupedMatches = {};
+
+    for (var match in matches) {
+      int leagueId = match.league.id;
+
+      if (!tempGroupedMatches.containsKey(leagueId)) {
+        tempGroupedMatches[leagueId] = [];
+      }
+      tempGroupedMatches[leagueId]!.add(match);
+    }
+
+    // Extract leagues and sort them first by country name, then by priority
+    List<League> sortedLeagues =
+        tempGroupedMatches.keys
+            .map(
+              (id) => tempGroupedMatches[id]![0].league,
+            ) // Get league from matches
+            .toList()
+          /*..sort((a, b) {
+            bool aIsPriority = priorityLeagueIds.contains(a.id);
+            bool bIsPriority = priorityLeagueIds.contains(b.id);
+
+            if (aIsPriority && !bIsPriority) return -1; // a comes first
+            if (!aIsPriority && bIsPriority) return 1; // b comes first
+
+            // If both are priority or neither is, sort by country name alphabetically
+            return a.country.compareTo(b.country);
+          });*/
+          ..sort((a, b) {
+            bool aIsPriority = priorityLeagueIds.contains(a.id);
+            bool bIsPriority = priorityLeagueIds.contains(b.id);
+
+            if (aIsPriority && bIsPriority) {
+              // Sort by the order in priorityLeagueIds
+              return priorityLeagueIds.indexOf(a.id) -
+                  priorityLeagueIds.indexOf(b.id);
+            }
+            if (aIsPriority) return -1; // a comes first
+            if (bIsPriority) return 1; // b comes first
+
+            // If both are not in priorityLeagueIds, sort by country name alphabetically
+            return a.country.compareTo(b.country);
+          });
+
+    // Reconstruct the sorted map
+    Map<int, List<Match>> sortedGroupedMatches = {
+      for (var league in sortedLeagues)
+        league.id: tempGroupedMatches[league.id]!,
+    };
+
+    setState(() {
+      groupedMatches = sortedGroupedMatches;
+      isLoading = false;
+      updateLeagues();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
+    var filteredMatches =
+        selectedLeague == null
+            ? groupedMatches.entries
+            : groupedMatches.entries.where(
+              (entry) => entry.key == selectedLeague,
+            );
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.filter_list_outlined),
+            PopupMenuButton<int>(
+              icon: Icon(Icons.filter_list_outlined),
+              onSelected: (int newLeagueId) {
+                filterMatchesByLeague(newLeagueId);
+              },
+              itemBuilder: (BuildContext context) {
+                return groupedMatches.keys.map((int leagueId) {
+                  return PopupMenuItem<int>(
+                    value: leagueId,
+                    child: Text(
+                      "${groupedMatches[leagueId]![0].league.country} - ${groupedMatches[leagueId]![0].league.name}",
+                    ),
+                  );
+                }).toList();
+              },
             ),
           ],
         ),
+
         actions: [
           IconButton(
             onPressed: () {
@@ -27,120 +203,108 @@ class HomePage extends StatelessWidget {
           ),
           IconButton(
             onPressed: () {
-              onItemTapped(3);
+              widget.onItemTapped(3);
             },
             icon: const Icon(Icons.person_pin),
           ),
         ],
-      ),
 
-      drawer: CustomDrawer(onItemTapped: onItemTapped),
-      body: ListView.builder(
-        itemCount: 3, // Dynamically render items
-        itemBuilder: (context, index) => _buildMatchesTab(context),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: DateScrollWidget(
+            onDateSelected: (date) {
+              setState(() {
+                selectedDate = date;
+                selectedLeague = null;
+              });
+              fetchMatches();
+            },
+          ),
+        ),
       ),
+      drawer: CustomDrawer(onItemTapped: widget.onItemTapped),
+      body:
+          isLoading
+              ? Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                onRefresh: fetchMatches,
+                child: CustomScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  slivers:
+                      filteredMatches.isEmpty
+                          ? [
+                            SliverFillRemaining(
+                              child: Center(
+                                child: Text("No matches available"),
+                              ),
+                            ),
+                          ]
+                          : [
+                            SliverList(
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
+                                var entry = filteredMatches.elementAt(index);
+
+                                final adIndex = index ~/ 6;
+                                if (index > 0 && index % 6 == 0) {
+                                  return BannerAdWidget();
+                                }
+                                final matchIndex = index - adIndex;
+                                if (matchIndex >= groupedMatches.length) {
+                                  return SizedBox.shrink();
+                                }
+
+                                return _buildMatchesTab(
+                                  context,
+                                  entry.value,
+                                  favoriteMatchIds,
+                                  toggleFavorite,
+                                  adHelper,
+                                );
+                              }, childCount: filteredMatches.length),
+                            ),
+                          ],
+                ),
+              ),
     );
   }
 }
 
-Widget _buildMatchesTab(BuildContext context) {
+Widget _buildMatchesTab(
+  BuildContext context,
+  List<Match> matches,
+  List<int> favoriteMatchIds,
+  Function(Match) toggleFavorite,
+  InterstitialAdHelper adHelper,
+) {
+  if (matches.isEmpty) return SizedBox();
+  Match firstMatch = matches.first;
+  League league = firstMatch.league;
+
   return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
     child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListTile(
-          leading: Image.asset("assets/liverpool.png", height: 24, width: 24),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(width: 4),
-              const Text(
-                'England',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.0),
-              ),
-              Image.asset("assets/liverpool.png", height: 16, width: 16),
-              const SizedBox(width: 4),
-              const Text(
-                'Premier League',
-                style: TextStyle(fontWeight: FontWeight.w400, fontSize: 12.0),
-              ),
-            ],
-          ),
-          trailing: IconButton(
-            onPressed: () => Navigator.pushNamed(context, "/league"),
-            icon: Icon(Icons.arrow_forward_ios, size: 16),
-          ),
-        ),
+        LeagueCard(league: league),
+
         ListView.builder(
-          shrinkWrap: true, // Avoid infinite height
-          physics:
-              const NeverScrollableScrollPhysics(), // Prevents nested scrolling
-          itemCount: 2,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: matches.length,
           itemBuilder: (context, index) {
-            return _buildMatchItem(
-              context,
-              '20:00',
-              'Liverpool',
-              index == 0 ? 'Aston Villa' : 'Arsenal',
-              '1.34',
-              index == 0 ? '2.35' : '1.18',
+            Match match = matches[index];
+            return FixtureItem(
+              match: match,
+              isFavorite: favoriteMatchIds.contains(matches[index].id),
+              onFavoriteToggle: toggleFavorite,
+              adHelper: adHelper,
             );
           },
         ),
       ],
-    ),
-  );
-}
-
-Widget _buildMatchItem(
-  BuildContext context,
-  String time,
-  String team1,
-  String team2,
-  String odd1,
-  String odd2,
-) {
-  return Card(
-    margin: const EdgeInsets.symmetric(vertical: 2.0),
-    clipBehavior: Clip.hardEdge,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-    child: InkWell(
-      onTap: () {
-        Navigator.pushNamed(context, "/match");
-      },
-      child: ListTile(
-        leading: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              time,
-              style: const TextStyle(
-                fontWeight: FontWeight.w400,
-                fontSize: 12.0,
-              ),
-            ),
-          ],
-        ),
-        title: Text(
-          team1,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14.0),
-        ),
-        subtitle: Text(
-          team2,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14.0),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.star)),
-            const SizedBox(width: 8),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [Text(odd1), const SizedBox(height: 4), Text(odd2)],
-            ),
-          ],
-        ),
-      ),
     ),
   );
 }

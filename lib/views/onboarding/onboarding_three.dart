@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:live_score_ke/widgets/custom_filled_button.dart';
+import 'package:livescore_x/widgets/custom_filled_button.dart';
 
 class OnboardingThree extends StatelessWidget {
   const OnboardingThree({super.key});
@@ -8,41 +8,46 @@ class OnboardingThree extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Container(
-          padding: EdgeInsets.only(left: 10),
-          child: Text('1 of 2', style: TextStyle(color: null)),
+        automaticallyImplyLeading: false,
+        title: Container(
+          padding: EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+          child: Text(
+            '1 of 2',
+            style: TextStyle(fontSize: 17.0, fontWeight: FontWeight.w400),
+          ),
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Spacer(),
+            Spacer(flex: 2),
             Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text(
-                  'Welcome to\nLivescoreKe',
+              spacing: 16,
+              children: const [
+                Text(
+                  'Welcome to LivescoreX',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: null,
-                  ),
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Your gateway to live sports, real-time\nupdates, and unforgettable moments.\nLet’s get started',
+                //SizedBox(height: 8),
+                Text(
+                  'Your gateway to live sports, real-time updates, and unforgettable moments. \nLet’s get started',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w200),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: null),
                 ),
               ],
             ),
-            Spacer(),
+            Spacer(flex: 2),
+
             Padding(
-              padding: EdgeInsets.only(bottom: 40),
+              padding: EdgeInsets.only(
+                bottom: 46,
+                top: 9,
+                left: 9.0,
+                right: 9.0,
+              ),
               child: CustomFilledButton(
                 text: 'Get Started',
                 onPressed: () {

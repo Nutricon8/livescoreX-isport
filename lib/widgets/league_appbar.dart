@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:livescore_x/utils/models/league.dart';
 
-class PremierLeagueAppBar extends StatelessWidget
-    implements PreferredSizeWidget {
-  const PremierLeagueAppBar({Key? key}) : super(key: key);
-
+class LeagueAppbar extends StatelessWidget implements PreferredSizeWidget {
+  final League league;
+  const LeagueAppbar({required this.league, Key? key}) : super(key: key);
   @override
   Size get preferredSize => const Size.fromHeight(160);
 
@@ -17,7 +17,7 @@ class PremierLeagueAppBar extends StatelessWidget
         },
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(90.0),
+        preferredSize: const Size.fromHeight(200.0),
         child: Transform.translate(
           offset: Offset(0, -20), // Move up by 10 pixels
           child: Column(
@@ -28,20 +28,35 @@ class PremierLeagueAppBar extends StatelessWidget
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: 75,
+                      height: 75,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(12.0)),
                       ),
-                      child: Image.asset(
-                        'assets/liverpool.png',
+                      child: Image.network(
+                        league.image,
+
                         fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.sports_soccer,
+                            //size: 20,
+                          );
+                        },
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return const Center(child: Icon(Icons.sports_soccer));
+                        },
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Premier League',
+                    Text(
+                      league.name,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,

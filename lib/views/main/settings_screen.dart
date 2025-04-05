@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:livescore_x/utils/ads/banner.dart';
+import 'package:livescore_x/utils/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const SettingsScreen({Key? key, required this.toggleTheme}) : super(key: key);
+  const SettingsScreen({Key? key}) : super(key: key);
 
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isDarkMode = false;
   bool _notificationsEnabled = false;
 
   @override
@@ -22,7 +23,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
       _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? false;
     });
   }
@@ -36,26 +36,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setBool('notificationsEnabled', value);
     String message = value ? 'Notifications Enabled' : 'Notifications Disabled';
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: Duration(seconds: 2)),
-    );
-  }
-
-  Future<void> _toggleTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkMode = !_isDarkMode;
-    });
-    await prefs.setBool('isDarkMode', _isDarkMode);
-    widget.toggleTheme();
-    String message =
-        _isDarkMode ? 'Switched to Dark Mode' : 'Switched to Light Mode';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: Duration(seconds: 2)),
+      SnackBar(content: Text(message), duration: Duration(seconds: 1)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -68,111 +55,141 @@ class _SettingsScreenState extends State<SettingsScreen> {
         centerTitle: true,
       ),
       body: Padding(
-        padding: EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 0.0,
           children: [
-            Container(
-              padding: EdgeInsets.all(10.0),
-              child: Text(
-                'NOTIFICATION SETTINGS',
-                style: TextStyle(fontSize: 14),
-              ),
-            ),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      title: Text('Notifications'),
-                      trailing: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300),
-                        transitionBuilder: (
-                          Widget child,
-                          Animation<double> animation,
-                        ) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          );
-                        },
-                        child: Switch(
-                          key: ValueKey<bool>(_isDarkMode),
-                          value: _notificationsEnabled,
-                          onChanged:
-                              (value) => _setNotificationPreference(value),
-                        ),
-                      ),
-                    ),
-                  ],
+            Column(
+              spacing: 0.0,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    'NOTIFICATION SETTINGS',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
                 ),
-              ),
+
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListTile(
+                          title: Text(
+                            'Notifications',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          trailing: AnimatedSwitcher(
+                            duration: Duration(milliseconds: 300),
+                            transitionBuilder: (
+                              Widget child,
+                              Animation<double> animation,
+                            ) {
+                              return ScaleTransition(
+                                scale: animation,
+                                child: child,
+                              );
+                            },
+                            child: Switch(
+                              key: ValueKey<bool>(_notificationsEnabled),
+                              value: _notificationsEnabled,
+                              onChanged:
+                                  (value) => _setNotificationPreference(value),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
+
             SizedBox(height: 20),
-            Container(
-              padding: EdgeInsets.all(10.0),
-              child: Text('THEME', style: TextStyle(fontSize: 14)),
-            ),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      title: Text('Light Mode'),
-                      trailing: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300),
-                        transitionBuilder: (
-                          Widget child,
-                          Animation<double> animation,
-                        ) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          );
-                        },
-                        child: Switch(
-                          key: ValueKey<bool>(_isDarkMode),
-                          value: _isDarkMode,
-                          onChanged: (value) => _toggleTheme(),
-                        ),
-                      ),
-                    ),
-                    Divider(),
-                    ListTile(
-                      title: Text('Dark Mode'),
-                      trailing: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300),
-                        transitionBuilder: (
-                          Widget child,
-                          Animation<double> animation,
-                        ) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          );
-                        },
-                        child: Switch(
-                          key: ValueKey<bool>(_isDarkMode),
-                          value: !_isDarkMode,
-                          onChanged: (value) => _toggleTheme(),
-                        ),
-                      ),
-                    ),
-                  ],
+            Column(
+              spacing: 0.0,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    'THEME',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
                 ),
-              ),
+
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListTile(
+                          title: Text(
+                            'Dark Mode',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          trailing: AnimatedSwitcher(
+                            duration: Duration(milliseconds: 300),
+                            transitionBuilder: (
+                              Widget child,
+                              Animation<double> animation,
+                            ) {
+                              return ScaleTransition(
+                                scale: animation,
+                                child: child,
+                              );
+                            },
+                            child: Switch(
+                              key: ValueKey(themeProvider.isDarkMode),
+                              value: themeProvider.isDarkMode,
+                              onChanged: (value) {
+                                themeProvider.toggleTheme(value);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      value
+                                          ? 'Dark Mode Enabled'
+                                          : 'Light Mode Enabled',
+                                    ),
+                                    duration: Duration(seconds: 1),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
             Spacer(),
+            BannerAdWidget(),
           ],
         ),
       ),

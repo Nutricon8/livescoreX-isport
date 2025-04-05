@@ -1,128 +1,217 @@
 import 'package:flutter/material.dart';
-import 'package:live_score_ke/utils/colors.dart';
-import 'package:live_score_ke/widgets/custom_filled_button.dart';
+import 'package:livescore_x/utils/api_service.dart';
+import 'package:livescore_x/utils/colors.dart';
+import 'package:livescore_x/utils/favorite_teams.dart';
+import 'package:livescore_x/utils/models/league.dart';
+import 'package:livescore_x/utils/models/team.dart';
+import 'package:livescore_x/widgets/custom_filled_button.dart';
+import 'package:livescore_x/widgets/custom_image.dart';
 
-class OnboardingFour extends StatelessWidget {
+class OnboardingFour extends StatefulWidget {
   const OnboardingFour({super.key});
+
+  @override
+  OnboardingFourState createState() => OnboardingFourState();
+}
+
+class OnboardingFourState extends State<OnboardingFour> {
+  final PageController _pageController = PageController(viewportFraction: 0.4);
+  double _currentPage = 0;
+
+  late Future<List<League>> _leaguesFuture;
+  List<Team> _teams = [];
+  bool isLoading = true;
+
+  List<int> favoriteTeamIds = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _leaguesFuture = ApiService().getLeagues(); // ✅ Fetch leagues
+    fetchTeamsAndLeagues(); // ✅ Ensure teams are fetched
+
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!;
+      });
+    });
+
+    loadFavoriteTeams();
+  }
+
+  Future<void> fetchTeamsAndLeagues() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      List<Team> fetchedTeams = await ApiService().getPremierLeagueTeams();
+      setState(() {
+        _teams = fetchedTeams;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> loadFavoriteTeams() async {
+    List<Team> teams = await getTeams();
+    setState(() {
+      favoriteTeamIds = teams.map((team) => team.id).toList();
+    });
+  }
+
+  Future<void> toggleFavorite(Team team) async {
+    setState(() {
+      if (favoriteTeamIds.contains(team.id)) {
+        favoriteTeamIds.remove(team.id);
+      } else {
+        favoriteTeamIds.add(team.id);
+      }
+    });
+
+    List<Team> teams =
+        favoriteTeamIds
+            .map((id) => _teams.firstWhere((t) => t.id == id))
+            .toList();
+    await saveTeams(teams);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: null),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text('2 of 2', style: TextStyle(color: null)),
+        title: const Text(
+          '2 of 2',
+          style: TextStyle(fontSize: 17.0, fontWeight: FontWeight.w400),
+        ),
         actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, "/main");
-                },
-                child: Text(
-                  'Skip',
-                  style: TextStyle(color: null, fontSize: 16),
-                ),
-              ),
+          TextButton(
+            onPressed: () => Navigator.pushReplacementNamed(context, "/main"),
+            child: const Text(
+              'Skip',
+              style: TextStyle(fontSize: 17.0, fontWeight: FontWeight.w400),
             ),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.all(0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: const Text(
+            const Center(
+              child: Text(
                 'Select your favourite tournaments and teams',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: null,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 110,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  TournamentLogo(
-                    tournamentName: 'Premier League',
-                    imageAsset: 'assets/premier_league.png',
-                    onTap: () {},
-                  ),
-                  TournamentLogo(
-                    tournamentName: 'Championship',
-                    imageAsset: 'assets/liverpool.png',
-                    onTap: () {},
-                  ),
-                  TournamentLogo(
-                    tournamentName: 'Serie A',
-                    imageAsset: 'assets/serie_a.png',
-                    onTap: () {},
-                  ),
-                  TournamentLogo(
-                    tournamentName: 'Bundesliga',
-                    imageAsset: 'assets/liverpool.png',
-                    onTap: () {},
-                  ),
-                  TournamentLogo(
-                    tournamentName: 'Laliga',
-                    imageAsset: 'assets/liverpool.png',
-                    onTap: () {},
-                  ),
-                ],
-              ),
+
+            FutureBuilder<List<League>>(
+              future: _leaguesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("No tournaments available"));
+                }
+
+                final tournaments = snapshot.data!;
+
+                return Column(
+                  children: [
+                    SizedBox(
+                      height: 140,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: tournaments.length,
+                        itemBuilder: (context, index) {
+                          double scale =
+                              (_currentPage - index).abs() < 0.5 ? 1 : 0.8;
+                          return Center(
+                            child: Transform.scale(
+                              scale: scale,
+                              child: LeagueLogo(
+                                tournamentName: tournaments[index].name,
+                                imageAsset: tournaments[index].image,
+                                onTap: () {},
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        tournaments.length,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: _currentPage.round() == index ? 12 : 8,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color:
+                                _currentPage.round() == index
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(context).colorScheme.onSecondary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 10),
-            const Divider(color: null),
+
+            const SizedBox(height: 8),
+
             Expanded(
-              child: ListView(
-                children: const [
-                  _TeamTile(
-                    name: 'Arsenal',
-                    subscribers: '14,812',
-                    image: 'assets/liverpool.png',
-                  ),
-                  _TeamTile(
-                    name: 'Aston Villa',
-                    subscribers: '9,502',
-                    image: 'assets/aston_villa.png',
-                  ),
-                  _TeamTile(
-                    name: 'Bournemouth',
-                    subscribers: '2,189',
-                    image: 'assets/liverpool.png',
-                  ),
-                  _TeamTile(
-                    name: 'Everton',
-                    subscribers: '5,067',
-                    image: 'assets/aston_villa.png',
-                  ),
-                  _TeamTile(
-                    name: 'Southampton',
-                    subscribers: '3,987',
-                    image: 'assets/liverpool.png',
-                  ),
-                ],
-              ),
+              child:
+                  isLoading
+                      ? const Center(
+                        child: CircularProgressIndicator(),
+                      ) // ✅ Loading state
+                      : _teams.isEmpty
+                      ? const Center(
+                        child: Text("No teams available"),
+                      ) // ✅ Handle empty state
+                      : ListView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        itemCount: _teams.length,
+                        itemBuilder: (context, index) {
+                          Team team = _teams[index];
+                          return TeamTile(
+                            team: team,
+                            isFavorite: favoriteTeamIds.contains(team.id),
+                            onFavoriteToggle: toggleFavorite,
+                          );
+                        },
+                      ),
             ),
+
             Padding(
-              padding: EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.all(20),
               child: CustomFilledButton(
                 text: 'Next',
-                onPressed: () {
-                  Navigator.pushNamed(context, "/main");
-                },
+                onPressed:
+                    () => Navigator.pushReplacementNamed(context, "/main"),
               ),
             ),
           ],
@@ -132,132 +221,158 @@ class OnboardingFour extends StatelessWidget {
   }
 }
 
-class TournamentLogo extends StatefulWidget {
+class LeagueLogo extends StatefulWidget {
   final String tournamentName;
   final String imageAsset;
   final bool selected;
-  final bool tapped;
   final VoidCallback onTap;
 
-  const TournamentLogo({
+  const LeagueLogo({
     required this.tournamentName,
     required this.imageAsset,
     this.selected = false,
-    this.tapped = false,
     required this.onTap,
     Key? key,
   }) : super(key: key);
 
   @override
-  _TournamentLogoState createState() => _TournamentLogoState();
+  _LeagueLogoState createState() => _LeagueLogoState();
 }
 
-class _TournamentLogoState extends State<TournamentLogo> {
+class _LeagueLogoState extends State<LeagueLogo> {
   late bool isSelected;
-  late bool isTapped;
-
   @override
   void initState() {
     super.initState();
     isSelected = widget.selected;
-    isTapped = widget.tapped;
   }
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         setState(() {
-          isTapped = !isTapped;
+          isSelected = !isSelected;
         });
       },
-      child: SizedBox(
-        width: isTapped ? 110 : 100, // Set a fixed width
-        height: isTapped ? 110 : 100, // Set a fixed height
-        child: Card(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
+
+      child: Column(
+        children: [
+          SizedBox(
+            width: 100,
+            height: 100,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Card(
+                margin: EdgeInsets.all(0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+                color: isDarkMode ? white6Percent : Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
                     alignment: Alignment.center,
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color:
-                          Theme.of(
-                            context,
-                          ).cardColor, // Example of using theme color
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(12.0),
+                    fit: StackFit.expand,
+                    children: [
+                      CustomImage(
+                        imageString: widget.imageAsset,
+                        width: double.infinity,
+                        height: double.infinity,
+                        isFilled: true,
                       ),
-                    ),
-                    child: Image.asset(widget.imageAsset, fit: BoxFit.fill),
+
+                      Positioned(
+                        bottom: 2,
+                        right: 2,
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          alignment: Alignment.center,
+                          //padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Icon(
+                            Icons.star_rounded,
+                            color: isSelected ? yellowColor : Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.tournamentName,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-              Positioned(
-                bottom: 2,
-                right: 2,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.star,
-                    color: isSelected ? yellowColor : Colors.grey,
-                  ),
-                  iconSize: 18,
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    setState(() {
-                      isTapped = true;
-                      isSelected = !isSelected;
-                    });
-                  },
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          SizedBox(
+            width: 90, // Same width as the image
+            child: Text(
+              widget.tournamentName,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _TeamTile extends StatelessWidget {
-  final String name;
-  final String subscribers;
-  final String image;
+class TeamTile extends StatelessWidget {
+  final Team team;
+  final bool isFavorite;
+  final Function(Team) onFavoriteToggle;
 
-  const _TeamTile({
-    //super.key,
-    required this.name,
-    required this.subscribers,
-    required this.image,
+  const TeamTile({
+    super.key,
+    required this.team,
+    required this.isFavorite,
+    required this.onFavoriteToggle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Image.asset(image, width: 40, height: 40),
-      title: Text(name, style: const TextStyle(fontSize: 16)),
-      subtitle: Text(
-        '$subscribers subscribers',
-        style: const TextStyle(fontSize: 14),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(width: 1.0, color: Theme.of(context).dividerColor),
+        ),
       ),
-      trailing: IconButton(icon: Icon(Icons.star_border), onPressed: () {}),
+      child: ListTile(
+        //visualDensity: VisualDensity(horizontal: 0, vertical: -2),
+        horizontalTitleGap: 8,
+        minLeadingWidth: 20,
+
+        //contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        contentPadding: EdgeInsets.zero, // Removes internal padding
+        visualDensity: VisualDensity(vertical: -4), // Reduces height
+
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: CustomImage(imageString: team.image, width: 32, height: 32),
+        ),
+        title: Text(
+          team.name,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        trailing: IconButton(
+          style: ButtonStyle(fixedSize: WidgetStateProperty.all(Size(24, 24))),
+          padding: EdgeInsets.all(4.0), // Less padding to fit the 16px icon
+          icon: Icon(
+            Icons.star_rounded,
+            color: isFavorite ? yellowColor : Colors.grey.withOpacity(0.2),
+            size: 16,
+          ),
+          onPressed: () => onFavoriteToggle(team),
+        ),
+      ),
     );
   }
 }

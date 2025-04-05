@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "363201426829",
+    "project_id": "livescoreke",
+    "storage_bucket": "livescoreke.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:363201426829:android:ebda87d65280d313c739c4",
+        "android_client_info": {
+          "package_name": "com.example.live_score_ke"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "363201426829-7u2a31b739178vf2vsd0sudr67372b9f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRMekrnw0UTaW6PDMH6118flNc7GP-ceY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "363201426829-7u2a31b739178vf2vsd0sudr67372b9f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "363201426829-vuche99iu0h42vcnar1528cvo3mgbmi2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.futballMusic"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:363201426829:android:d4b635f22eacd12ac739c4",
+        "android_client_info": {
+          "package_name": "com.livescore_x"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "363201426829-7u2a31b739178vf2vsd0sudr67372b9f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRMekrnw0UTaW6PDMH6118flNc7GP-ceY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "363201426829-7u2a31b739178vf2vsd0sudr67372b9f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "363201426829-vuche99iu0h42vcnar1528cvo3mgbmi2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.futballMusic"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

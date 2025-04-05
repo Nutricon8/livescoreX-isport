@@ -2,22 +2,11 @@
 import 'package:flutter/material.dart';
 
 // Define color constants
-const Color kDarkColor = Color(0xFF18181B);
-const Color kPrimaryColor = Color(0xFF1E88E5);
-const Color kAccentColor = Color(0xFFFFC107);
-
-const Color primaryColor = Color(0xFFC94038);
-const Color whiteColor = Color(0xFFFFFFFF);
 const Color lightGreenColor = Color(0xFF1F9C20);
-const Color neutralColor = Color(0xFF2F283B);
-const Color neutralTwoColor = Color(0xFF746C82); //for switch bar
 const Color redColor = Color(0xFFD90D2D);
-const Color yellowColor = Color(0xFFF0DC28);
-const Color darkGreenColor = Color(0x48AB933D);
+const Color yellowColor = Color.fromARGB(255, 245, 223, 22);
 const Color greenColor = Color(0xFF46A56C);
-const Color blueColor = Color(0xFF007FFF);
-const Color grey900 = Color(0xFF18181B);
-const Color lightGreyColor = Color(0x7AF1F1F1);
+const Color blueColor = Color(0xFF0437F2);
 
 // Light Theme Colors
 const Color kLightBackground = Color(0xFFFFFFFF);
@@ -30,8 +19,9 @@ const Color kLightText = Color(0xFF18181B);
 const Color kDarkBackground = Color(0xFF121212);
 const Color kDarkPrimary = Color(0xFFC94038);
 const Color kDarkAccent = Color(0xFFC94038);
-const Color kDarkSurface = Color(0xFF1E1E1E);
+const Color kDarkSurface = Color(0xFF1C1B20);
 const Color kDarkText = Colors.white;
+const Color white6Percent = Color(0x0FFFFFFF);
 
 // Define Light Theme Color Scheme
 final ColorScheme lightColorScheme = ColorScheme(
@@ -53,7 +43,7 @@ final ColorScheme darkColorScheme = ColorScheme(
   secondary: kDarkAccent,
   surface: kDarkSurface,
   onPrimary: Colors.white,
-  onSecondary: Colors.black,
+  onSecondary: white6Percent,
   onSurface: kDarkText,
   error: Colors.redAccent,
   onError: Colors.white,

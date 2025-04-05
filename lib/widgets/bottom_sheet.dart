@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:live_score_ke/widgets/custom_filled_button.dart';
+import 'package:livescore_x/widgets/custom_filled_button.dart';
 
 class RemoveTeamBottomSheet extends StatelessWidget {
-  const RemoveTeamBottomSheet({Key? key}) : super(key: key);
+  final VoidCallback onConfirm;
+
+  const RemoveTeamBottomSheet({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 333,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      decoration: const BoxDecoration(
-        color: Colors.black,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
@@ -18,30 +21,30 @@ class RemoveTeamBottomSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.delete_outline, size: 48, color: Colors.white),
+          const Icon(Icons.delete_outline, size: 36),
           const SizedBox(height: 16),
-          const Text(
-            'Remove Team',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          Text(
+            'Delete Account',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Do you want to remove the team and don’t get notifications?',
+          Text(
+            'Are you sure you want to terminate you account? This action is irreversible',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
           ),
           const SizedBox(height: 24),
-          CustomFilledButton(onPressed: () {}, text: 'Confirm'),
+          CustomFilledButton(onPressed: onConfirm, text: 'Confirm'),
           const SizedBox(height: 16),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

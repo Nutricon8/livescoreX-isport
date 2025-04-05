@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = live_score_ke
+PRODUCT_NAME = livescore_x
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.futballMusic
+PRODUCT_BUNDLE_IDENTIFIER = com.livescore_x
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
