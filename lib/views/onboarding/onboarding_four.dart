@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/api_service.dart';
-import 'package:livescore_x/utils/colors.dart';
-import 'package:livescore_x/utils/favorite_teams.dart';
-import 'package:livescore_x/utils/models/league.dart';
-import 'package:livescore_x/utils/models/team.dart';
-import 'package:livescore_x/widgets/custom_filled_button.dart';
-import 'package:livescore_x/widgets/custom_image.dart';
+import 'package:pulsescore/utils/api_service.dart';
+import 'package:pulsescore/utils/colors.dart';
+import 'package:pulsescore/utils/favorite_leagues.dart';
+import 'package:pulsescore/utils/favorite_teams.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/team.dart';
+import 'package:pulsescore/widgets/custom_filled_button.dart';
+import 'package:pulsescore/widgets/custom_image.dart';
 
 class OnboardingFour extends StatefulWidget {
   const OnboardingFour({super.key});
@@ -23,12 +24,13 @@ class OnboardingFourState extends State<OnboardingFour> {
   bool isLoading = true;
 
   List<int> favoriteTeamIds = [];
+  List<int> favoriteLeagueIds = [];
 
   @override
   void initState() {
     super.initState();
     _leaguesFuture = ApiService().getLeagues(); // ✅ Fetch leagues
-    fetchTeamsAndLeagues(); // ✅ Ensure teams are fetched
+    fetchTeams(); // ✅ Ensure teams are fetched
 
     _pageController.addListener(() {
       setState(() {
@@ -36,10 +38,10 @@ class OnboardingFourState extends State<OnboardingFour> {
       });
     });
 
-    loadFavoriteTeams();
+    loadFavorites();
   }
 
-  Future<void> fetchTeamsAndLeagues() async {
+  Future<void> fetchTeams() async {
     setState(() {
       isLoading = true;
     });
@@ -56,10 +58,12 @@ class OnboardingFourState extends State<OnboardingFour> {
     }
   }
 
-  Future<void> loadFavoriteTeams() async {
+  Future<void> loadFavorites() async {
     List<Team> teams = await getTeams();
+    List<League> leagues = await getLeagues();
     setState(() {
       favoriteTeamIds = teams.map((team) => team.id).toList();
+      favoriteLeagueIds = leagues.map((league) => league.id).toList();
     });
   }
 
@@ -77,6 +81,24 @@ class OnboardingFourState extends State<OnboardingFour> {
             .map((id) => _teams.firstWhere((t) => t.id == id))
             .toList();
     await saveTeams(teams);
+  }
+
+  Future<void> toggleFavoriteLeague(League league) async {
+    setState(() {
+      if (favoriteLeagueIds.contains(league.id)) {
+        favoriteLeagueIds.remove(league.id);
+      } else {
+        favoriteLeagueIds.add(league.id);
+      }
+    });
+
+    final leaguesList = await _leaguesFuture; // ✅ Await the future
+    List<League> leagues =
+        favoriteLeagueIds
+            .map((id) => leaguesList.firstWhere((l) => l.id == id))
+            .toList();
+
+    await saveLeagues(leagues);
   }
 
   @override
@@ -143,13 +165,19 @@ class OnboardingFourState extends State<OnboardingFour> {
                         itemBuilder: (context, index) {
                           double scale =
                               (_currentPage - index).abs() < 0.5 ? 1 : 0.8;
+
+                          League league = tournaments[index];
+
                           return Center(
                             child: Transform.scale(
                               scale: scale,
                               child: LeagueLogo(
-                                tournamentName: tournaments[index].name,
-                                imageAsset: tournaments[index].image,
-                                onTap: () {},
+                                league: league,
+
+                                isFavorite: favoriteLeagueIds.contains(
+                                  league.id,
+                                ),
+                                onFavoriteToggle: toggleFavoriteLeague,
                               ),
                             ),
                           );
@@ -221,72 +249,53 @@ class OnboardingFourState extends State<OnboardingFour> {
   }
 }
 
-class LeagueLogo extends StatefulWidget {
-  final String tournamentName;
-  final String imageAsset;
-  final bool selected;
-  final VoidCallback onTap;
+class LeagueLogo extends StatelessWidget {
+  final League league;
+  final bool isFavorite;
+  final Function(League) onFavoriteToggle;
 
   const LeagueLogo({
-    required this.tournamentName,
-    required this.imageAsset,
-    this.selected = false,
-    required this.onTap,
+    required this.league,
+    required this.isFavorite,
+    required this.onFavoriteToggle,
     Key? key,
   }) : super(key: key);
 
   @override
-  _LeagueLogoState createState() => _LeagueLogoState();
-}
-
-class _LeagueLogoState extends State<LeagueLogo> {
-  late bool isSelected;
-  @override
-  void initState() {
-    super.initState();
-    isSelected = widget.selected;
-  }
-
-  @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          isSelected = !isSelected;
-        });
-      },
+    return Column(
+      children: [
+        SizedBox(
+          width: 100,
+          height: 100,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Card(
+              margin: EdgeInsets.all(0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              color: isDarkMode ? white6Percent : Colors.white,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  alignment: Alignment.center,
+                  fit: StackFit.expand,
+                  children: [
+                    CustomImage(
+                      imageString: league.image,
+                      width: double.infinity,
+                      height: double.infinity,
+                      isFilled: true,
+                    ),
 
-      child: Column(
-        children: [
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Card(
-                margin: EdgeInsets.all(0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 4,
-                color: isDarkMode ? white6Percent : Colors.white,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    fit: StackFit.expand,
-                    children: [
-                      CustomImage(
-                        imageString: widget.imageAsset,
-                        width: double.infinity,
-                        height: double.infinity,
-                        isFilled: true,
-                      ),
-
-                      Positioned(
-                        bottom: 2,
-                        right: 2,
+                    Positioned(
+                      bottom: 2,
+                      right: 2,
+                      child: GestureDetector(
+                        onTap: () => onFavoriteToggle(league),
                         child: Container(
                           width: 16,
                           height: 16,
@@ -298,29 +307,29 @@ class _LeagueLogoState extends State<LeagueLogo> {
                           ),
                           child: Icon(
                             Icons.star_rounded,
-                            color: isSelected ? yellowColor : Colors.white,
+                            color: isFavorite ? yellowColor : Colors.white,
                             size: 14,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          SizedBox(
-            width: 90, // Same width as the image
-            child: Text(
-              widget.tournamentName,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
+        ),
+        SizedBox(
+          width: 90, // Same width as the image
+          child: Text(
+            league.name,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -367,7 +376,7 @@ class TeamTile extends StatelessWidget {
           padding: EdgeInsets.all(4.0), // Less padding to fit the 16px icon
           icon: Icon(
             Icons.star_rounded,
-            color: isFavorite ? yellowColor : Colors.grey.withOpacity(0.2),
+            color: isFavorite ? yellowColor : Colors.grey,
             size: 16,
           ),
           onPressed: () => onFavoriteToggle(team),

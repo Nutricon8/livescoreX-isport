@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
-import 'package:livescore_x/utils/models/league.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/utils/models/match_event.dart';
-import 'package:livescore_x/utils/models/match_statistics.dart';
-import 'package:livescore_x/utils/models/player.dart';
-import 'package:livescore_x/utils/models/standing.dart';
-import 'package:livescore_x/utils/models/team.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/utils/models/match_event.dart';
+import 'package:pulsescore/utils/models/match_statistics.dart';
+import 'package:pulsescore/utils/models/player.dart';
+import 'package:pulsescore/utils/models/standing.dart';
+import 'package:pulsescore/utils/models/team.dart';
 
 class ApiService {
   static const String _baseUrl = "https://v3.football.api-sports.io";

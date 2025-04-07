@@ -6,10 +6,10 @@ class DateScrollWidget extends StatefulWidget {
   const DateScrollWidget({super.key, required this.onDateSelected});
 
   @override
-  _DateScrollWidgetState createState() => _DateScrollWidgetState();
+  DateScrollWidgetState createState() => DateScrollWidgetState();
 }
 
-class _DateScrollWidgetState extends State<DateScrollWidget>
+class DateScrollWidgetState extends State<DateScrollWidget>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true; // Keep widget alive

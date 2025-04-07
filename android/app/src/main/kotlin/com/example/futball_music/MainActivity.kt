@@ -1,4 +1,4 @@
-package com.livescore_x
+package com.livefooltballscore
 
 import io.flutter.embedding.android.FlutterActivity
 

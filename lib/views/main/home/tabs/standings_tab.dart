@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/api_service.dart';
-import 'package:livescore_x/utils/models/standing.dart';
+import 'package:pulsescore/utils/api_service.dart';
+import 'package:pulsescore/utils/models/standing.dart';
 
 import '../../../../widgets/standing_card.dart';
 

@@ -1,5 +1,5 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:livescore_x/utils/constants.dart';
+import 'package:pulsescore/utils/constants.dart';
 
 class RewardedAdHelper {
   RewardedAd? _rewardedAd;

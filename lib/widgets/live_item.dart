@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/ads/rewarded.dart';
-import 'package:livescore_x/utils/colors.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/views/main/home/live_match_details.dart';
-import 'package:livescore_x/widgets/custom_image.dart';
+import 'package:pulsescore/utils/ads/rewarded.dart';
+import 'package:pulsescore/utils/colors.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/views/main/home/live_match_details.dart';
+import 'package:pulsescore/widgets/custom_image.dart';
 
 class LiveItem extends StatelessWidget {
   final Match match;

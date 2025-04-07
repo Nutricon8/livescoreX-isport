@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/colors.dart';
-import 'package:livescore_x/utils/favorite_teams.dart';
-import 'package:livescore_x/utils/format_date_time.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/utils/models/team.dart';
-import 'package:livescore_x/widgets/custom_image.dart';
+import 'package:pulsescore/utils/colors.dart';
+import 'package:pulsescore/utils/favorite_leagues.dart';
+import 'package:pulsescore/utils/favorite_teams.dart';
+import 'package:pulsescore/utils/format_date_time.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/utils/models/team.dart';
+import 'package:pulsescore/widgets/custom_image.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Match match;
@@ -21,6 +23,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _CustomAppBarState extends State<CustomAppBar> {
   bool isHomeFavorite = false;
   bool isAwayFavorite = false;
+  bool isFavoriteLeague = false;
 
   @override
   void initState() {
@@ -30,12 +33,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   Future<void> _loadFavorites() async {
     List<Team> favoriteTeams = await getTeams();
+    List<League> favoriteLeagues = await getLeagues();
+
     setState(() {
       isHomeFavorite = favoriteTeams.any(
         (team) => team.id == widget.match.home.id,
       );
       isAwayFavorite = favoriteTeams.any(
         (team) => team.id == widget.match.away.id,
+      );
+
+      isFavoriteLeague = favoriteLeagues.any(
+        (league) => league.id == widget.match.league.id,
       );
     });
   }
@@ -56,6 +65,21 @@ class _CustomAppBarState extends State<CustomAppBar> {
       } else {
         isAwayFavorite = !isFav;
       }
+    });
+  }
+
+  Future<void> _toggleFavoriteLeague(League league) async {
+    List<League> favoriteLagues = await getLeagues();
+    bool isFav = favoriteLagues.any((l) => l.id == league.id);
+
+    if (isFav) {
+      await deleteLeague(league.id);
+    } else {
+      await addLeague(league);
+    }
+
+    setState(() {
+      isFavoriteLeague = !isFav;
     });
   }
 
@@ -82,6 +106,17 @@ class _CustomAppBarState extends State<CustomAppBar> {
         ],
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          padding: EdgeInsets.all(8),
+          onPressed: () => _toggleFavoriteLeague(widget.match.league),
+          icon: Icon(
+            Icons.star_rounded,
+            color: isFavoriteLeague ? yellowColor : Colors.grey,
+            size: 16,
+          ),
+        ),
+      ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(100.0),
         child: Column(

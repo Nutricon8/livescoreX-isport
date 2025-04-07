@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livescore_x/utils/favorite_matches.dart';
-import 'package:livescore_x/utils/favorite_teams.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/utils/models/team.dart';
-import 'package:livescore_x/views/main/bottom_nav.dart';
-import 'package:livescore_x/widgets/favorite_match.dart';
-import 'package:livescore_x/widgets/favorite_team.dart';
+import 'package:pulsescore/utils/favorite_matches.dart';
+import 'package:pulsescore/utils/favorite_teams.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/utils/models/team.dart';
+import 'package:pulsescore/views/main/bottom_nav.dart';
+import 'package:pulsescore/widgets/favorite_match.dart';
+import 'package:pulsescore/widgets/favorite_team.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});

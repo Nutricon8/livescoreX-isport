@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:livescore_x/utils/models/league.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/utils/models/team.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/utils/models/team.dart';
 
 class MatchConverter {
   // Convert a list of Match objects to JSON String

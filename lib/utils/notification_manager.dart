@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:awesome_notifications/awesome_notifications.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
-import 'package:livescore_x/utils/favorite_matches.dart';
-import 'package:livescore_x/utils/favorite_teams.dart';
-import 'package:livescore_x/utils/models/match.dart';
+import 'package:pulsescore/utils/favorite_leagues.dart';
+import 'package:pulsescore/utils/favorite_matches.dart';
+import 'package:pulsescore/utils/favorite_teams.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/match.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'converters/match_converter.dart';
 import 'models/team.dart';
@@ -13,6 +15,7 @@ import 'models/team.dart';
 Future<void> checkMatchUpdates(List<Match> liveMatches) async {
   List<Team> favoriteTeams = await getTeams(); // Get favorite teams
   List<Match> favoriteMatches = await getMatches(); // Get favorite matches
+  List<League> favoriteLeagues = await getLeagues();
 
   if (favoriteTeams.isEmpty && favoriteMatches.isEmpty) return;
 
@@ -26,7 +29,8 @@ Future<void> checkMatchUpdates(List<Match> liveMatches) async {
         favoriteTeams.any(
           (team) => team.id == match.home.id || team.id == match.away.id,
         ) ||
-        favoriteMatches.any((favMatch) => favMatch.id == match.id);
+        favoriteMatches.any((favMatch) => favMatch.id == match.id) ||
+        favoriteLeagues.any((favLeague) => favLeague.id == match.league.id);
 
     var previousMatch = previousMatches.firstWhere(
       (m) => m.id == match.id,

@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livescore_x/utils/ads/banner.dart';
-import 'package:livescore_x/views/main/home/favorites_screen.dart';
-import 'package:livescore_x/views/main/home/home_page.dart';
-import 'package:livescore_x/views/main/home/live_page.dart';
-import 'package:livescore_x/views/main/profile_screen.dart';
+import 'package:pulsescore/utils/ads/banner.dart';
+import 'package:pulsescore/views/main/home/favorites_screen.dart';
+import 'package:pulsescore/views/main/home/home_page.dart';
+import 'package:pulsescore/views/main/home/live_page.dart';
+import 'package:pulsescore/views/main/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BottomNavScreen extends StatefulWidget {

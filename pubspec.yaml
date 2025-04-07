@@ -1,4 +1,4 @@
-name: "livescore_x"
+name: "pulsescore"
 description: "A new Flutter project."
 publish_to: "none"
 version: 0.1.0
@@ -26,6 +26,7 @@ dependencies:
   flutter_background_service_android: ^6.3.0
   flutter_background_service: ^5.1.0
   provider: ^6.1.2
+  flutter_ringtone_player: ^4.0.0+4
 
 dev_dependencies:
   flutter_test:
@@ -35,17 +36,16 @@ dev_dependencies:
   json_serializable: ^6.9.4
   launcher_name: ^1.0.2
   flutter_launcher_icons: ^0.14.3
-  flutter_ringtone_player: ^4.0.0+4
 
 flutter_launcher_icons: #flutter pub run flutter_launcher_icons
   android: true
   ios: true
-  image_path: "assets/logo4.jpg"  # Path to your icon image
-  adaptive_icon_foreground: "assets/logo4.jpg"  # For Android adaptive icons
+  image_path: "assets/logo5.png"  # Path to your icon image
+  adaptive_icon_foreground: "assets/logo5.png"  # For Android adaptive icons
   adaptive_icon_background: "#FFFFFF"
 
 launcher_name:
-  name: "LivescoreX"
+  name: "PulseScore"
 
 flutter:
   uses-material-design: true

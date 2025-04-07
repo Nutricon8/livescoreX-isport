@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:livescore_x/utils/colors.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/views/main/home/match_details_screen.dart';
-import 'package:livescore_x/widgets/custom_image.dart';
+import 'package:pulsescore/utils/colors.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/views/main/home/match_details_screen.dart';
+import 'package:pulsescore/widgets/custom_image.dart';
 
 class FavoriteMatch extends StatelessWidget {
   final Match match;

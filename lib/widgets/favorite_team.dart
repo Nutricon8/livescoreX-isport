@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/colors.dart';
-import 'package:livescore_x/utils/models/team.dart';
-import 'package:livescore_x/widgets/custom_image.dart';
+import 'package:pulsescore/utils/colors.dart';
+import 'package:pulsescore/utils/models/team.dart';
+import 'package:pulsescore/widgets/custom_image.dart';
 
 class FavoriteTeam extends StatelessWidget {
   final Team team;

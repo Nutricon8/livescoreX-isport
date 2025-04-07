@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/views/main/home/tabs/standings_tab.dart';
-import 'package:livescore_x/widgets/league_appbar.dart';
-import 'package:livescore_x/utils/models/league.dart';
+import 'package:pulsescore/views/main/home/tabs/standings_tab.dart';
+import 'package:pulsescore/widgets/league_appbar.dart';
+import 'package:pulsescore/utils/models/league.dart';
 
 class LeagueDetailsScreen extends StatefulWidget {
   final League league;
@@ -9,13 +9,14 @@ class LeagueDetailsScreen extends StatefulWidget {
   const LeagueDetailsScreen({required this.league, super.key});
 
   @override
-  State<LeagueDetailsScreen> createState() => _LeagueDetailsScreenState();
+  State<LeagueDetailsScreen> createState() => LeagueDetailsScreenState();
 }
 
-class _LeagueDetailsScreenState extends State<LeagueDetailsScreen>
+class LeagueDetailsScreenState extends State<LeagueDetailsScreen>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true; // Keep widget alive
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

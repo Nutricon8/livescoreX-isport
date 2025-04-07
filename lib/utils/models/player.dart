@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:livescore_x/utils/models/team.dart';
+import 'package:pulsescore/utils/models/team.dart';
 
 class Player {
   final String name;

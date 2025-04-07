@@ -1,6 +1,6 @@
-import 'package:livescore_x/utils/converters/team_converter.dart';
+import 'package:pulsescore/utils/converters/team_converter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:livescore_x/utils/models/team.dart';
+import 'package:pulsescore/utils/models/team.dart';
 
 Future<void> saveTeams(List<Team> teams) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/ads/banner.dart';
-import 'package:livescore_x/utils/theme_provider.dart';
+import 'package:pulsescore/utils/ads/banner.dart';
+import 'package:pulsescore/utils/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

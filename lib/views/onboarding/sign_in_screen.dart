@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/auth_service.dart';
-import 'package:livescore_x/utils/colors.dart';
-import 'package:livescore_x/widgets/custom_filled_button.dart';
+import 'package:pulsescore/utils/auth_service.dart';
+import 'package:pulsescore/utils/colors.dart';
+import 'package:pulsescore/widgets/custom_filled_button.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});

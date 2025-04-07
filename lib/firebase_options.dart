@@ -17,29 +17,17 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -53,10 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCRMekrnw0UTaW6PDMH6118flNc7GP-ceY',
-    appId: '1:363201426829:android:d4b635f22eacd12ac739c4',
-    messagingSenderId: '363201426829',
-    projectId: 'livescoreke',
-    storageBucket: 'livescoreke.firebasestorage.app',
+    apiKey: 'AIzaSyDK_qBtcVZB9ALB_l22Aiki-0f9yVVvmHQ',
+    appId: '1:363163883200:android:bc210c4b667ba39e57ff25',
+    messagingSenderId: '363163883200',
+    projectId: 'pulsescore-a8722',
+    storageBucket: 'pulsescore-a8722.firebasestorage.app',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDMWt_05l2Kx3Ab-DdhDYqhbGx2oMG0N6c',
+    appId: '1:363163883200:web:207f27ccf05bfffb57ff25',
+    messagingSenderId: '363163883200',
+    projectId: 'pulsescore-a8722',
+    authDomain: 'pulsescore-a8722.firebaseapp.com',
+    storageBucket: 'pulsescore-a8722.firebasestorage.app',
+    measurementId: 'G-GFG7HZYVSP',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAK6r_M5N9kN3cfIbugWkzN1xKakjOvI24',
+    appId: '1:363163883200:ios:04df9eb1e19253ad57ff25',
+    messagingSenderId: '363163883200',
+    projectId: 'pulsescore-a8722',
+    storageBucket: 'pulsescore-a8722.firebasestorage.app',
+    iosBundleId: 'com.livefooltballscore',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAK6r_M5N9kN3cfIbugWkzN1xKakjOvI24',
+    appId: '1:363163883200:ios:04df9eb1e19253ad57ff25',
+    messagingSenderId: '363163883200',
+    projectId: 'pulsescore-a8722',
+    storageBucket: 'pulsescore-a8722.firebasestorage.app',
+    iosBundleId: 'com.livefooltballscore',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyDMWt_05l2Kx3Ab-DdhDYqhbGx2oMG0N6c',
+    appId: '1:363163883200:web:27d0ea29f179246757ff25',
+    messagingSenderId: '363163883200',
+    projectId: 'pulsescore-a8722',
+    authDomain: 'pulsescore-a8722.firebaseapp.com',
+    storageBucket: 'pulsescore-a8722.firebasestorage.app',
+    measurementId: 'G-17V2SNJNYG',
   );
 }

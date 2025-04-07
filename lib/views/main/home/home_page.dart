@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:livescore_x/utils/ads/banner.dart';
-import 'package:livescore_x/utils/ads/interstitial.dart';
-import 'package:livescore_x/utils/api_service.dart';
-import 'package:livescore_x/utils/favorite_matches.dart';
-import 'package:livescore_x/utils/json_leagues.dart';
-import 'package:livescore_x/utils/models/league.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/widgets/custom_drawer.dart';
-import 'package:livescore_x/widgets/fixture_item.dart';
-import 'package:livescore_x/widgets/league_card.dart';
+import 'package:pulsescore/utils/ads/banner.dart';
+import 'package:pulsescore/utils/ads/interstitial.dart';
+import 'package:pulsescore/utils/api_service.dart';
+import 'package:pulsescore/utils/favorite_matches.dart';
+import 'package:pulsescore/utils/json_leagues.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/widgets/custom_drawer.dart';
+import 'package:pulsescore/widgets/fixture_item.dart';
+import 'package:pulsescore/widgets/league_card.dart';
 import '../../../widgets/DateScrollWidget.dart';
 
 class HomePage extends StatefulWidget {

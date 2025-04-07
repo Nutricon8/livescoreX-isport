@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/utils/models/league.dart';
+import 'package:pulsescore/utils/models/league.dart';
 
 class LeagueAppbar extends StatelessWidget implements PreferredSizeWidget {
   final League league;

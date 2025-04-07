@@ -1,5 +1,5 @@
-import 'package:livescore_x/utils/models/league.dart';
-import 'package:livescore_x/utils/models/team.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/team.dart';
 
 class Match {
   final League league;

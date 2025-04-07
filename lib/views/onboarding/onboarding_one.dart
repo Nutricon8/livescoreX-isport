@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:livescore_x/widgets/custom_filled_button.dart';
-import 'package:livescore_x/widgets/custom_outlined_button.dart';
+import 'package:pulsescore/widgets/custom_filled_button.dart';
+import 'package:pulsescore/widgets/custom_outlined_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingOne extends StatelessWidget {
@@ -36,7 +36,7 @@ class OnboardingOne extends StatelessWidget {
               spacing: 16,
               children: const [
                 Text(
-                  'Welcome to LivescoreX',
+                  'Welcome to PulseScore',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                   textAlign: TextAlign.center,
                 ),

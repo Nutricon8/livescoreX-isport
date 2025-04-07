@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:livescore_x/utils/models/league.dart';
-import 'package:livescore_x/views/main/home/league_details_screen.dart';
-import 'package:livescore_x/widgets/custom_image.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/views/main/home/league_details_screen.dart';
+import 'package:pulsescore/widgets/custom_image.dart';
 
 class LeagueCard extends StatelessWidget {
   final League league;

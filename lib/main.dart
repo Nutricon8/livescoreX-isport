@@ -7,23 +7,23 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:livescore_x/firebase_options.dart';
-import 'package:livescore_x/utils/ads/app_open.dart';
-import 'package:livescore_x/utils/api_service.dart';
-import 'package:livescore_x/utils/colors.dart';
-import 'package:livescore_x/utils/models/league.dart';
-import 'package:livescore_x/utils/models/match.dart';
-import 'package:livescore_x/utils/models/team.dart';
-import 'package:livescore_x/utils/notification_manager.dart';
-import 'package:livescore_x/utils/theme_provider.dart';
-import 'package:livescore_x/views/main/bottom_nav.dart';
-import 'package:livescore_x/views/main/home/live_match_details.dart';
-import 'package:livescore_x/views/main/settings_screen.dart';
-import 'package:livescore_x/views/onboarding/onboarding_four.dart';
-import 'package:livescore_x/views/onboarding/onboarding_one.dart';
-import 'package:livescore_x/views/onboarding/onboarding_three.dart';
-import 'package:livescore_x/views/onboarding/sign_in_screen.dart';
-import 'package:livescore_x/views/onboarding/sign_up_screen.dart';
+import 'package:pulsescore/firebase_options.dart';
+import 'package:pulsescore/utils/ads/app_open.dart';
+import 'package:pulsescore/utils/api_service.dart';
+import 'package:pulsescore/utils/colors.dart';
+import 'package:pulsescore/utils/models/league.dart';
+import 'package:pulsescore/utils/models/match.dart';
+import 'package:pulsescore/utils/models/team.dart';
+import 'package:pulsescore/utils/notification_manager.dart';
+import 'package:pulsescore/utils/theme_provider.dart';
+import 'package:pulsescore/views/main/bottom_nav.dart';
+import 'package:pulsescore/views/main/home/live_match_details.dart';
+import 'package:pulsescore/views/main/settings_screen.dart';
+import 'package:pulsescore/views/onboarding/onboarding_four.dart';
+import 'package:pulsescore/views/onboarding/onboarding_one.dart';
+import 'package:pulsescore/views/onboarding/onboarding_three.dart';
+import 'package:pulsescore/views/onboarding/sign_in_screen.dart';
+import 'package:pulsescore/views/onboarding/sign_up_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -234,7 +234,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'LivescoreX',
+      title: 'PulseScore',
       themeMode:
           Provider.of<ThemeProvider>(context).isDarkMode
               ? ThemeMode.dark
@@ -602,6 +602,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             break;
           case '/settings':
             page = SettingsScreen();
+            break;
+          case '/match-details':
+            final match = settings.arguments as Match;
+            page = LiveMatchDetails(match: match);
             break;
           default:
             page = OnboardingOne();

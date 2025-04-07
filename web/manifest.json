@@ -1,6 +1,6 @@
 {
-  "name": "livescore_x",
-  "short_name": "livescore_x",
+  "name": "pulsescore",
+  "short_name": "pulsescore",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0175C2",
