@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:pulsescore/utils/models/team.dart';
+import 'package:scorecast/utils/models/team.dart';
 
 class Player {
   final String name;

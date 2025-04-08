@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pulsescore/views/main/home/tabs/standings_tab.dart';
-import 'package:pulsescore/views/main/home/tabs/lineup_tab.dart';
-import 'package:pulsescore/views/main/home/tabs/statistics_tab.dart';
-import 'package:pulsescore/views/main/home/tabs/summary_tab.dart';
-import 'package:pulsescore/widgets/live_appbar.dart';
-import 'package:pulsescore/utils/models/match.dart';
+import 'package:scorecast/views/main/home/tabs/standings_tab.dart';
+import 'package:scorecast/views/main/home/tabs/lineup_tab.dart';
+import 'package:scorecast/views/main/home/tabs/statistics_tab.dart';
+import 'package:scorecast/views/main/home/tabs/summary_tab.dart';
+import 'package:scorecast/widgets/live_appbar.dart';
+import 'package:scorecast/utils/models/match.dart';
 
 class LiveMatchDetails extends StatelessWidget {
   final Match match;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pulsescore/views/main/home/tabs/standings_tab.dart';
-import 'package:pulsescore/widgets/league_appbar.dart';
-import 'package:pulsescore/utils/models/league.dart';
+import 'package:scorecast/views/main/home/tabs/standings_tab.dart';
+import 'package:scorecast/widgets/league_appbar.dart';
+import 'package:scorecast/utils/models/league.dart';
 
 class LeagueDetailsScreen extends StatefulWidget {
   final League league;

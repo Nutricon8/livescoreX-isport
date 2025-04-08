@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "363163883200",
-    "project_id": "pulsescore-a8722",
-    "storage_bucket": "pulsescore-a8722.firebasestorage.app"
+    "project_number": "1014802281535",
+    "project_id": "scorecast-9a260",
+    "storage_bucket": "scorecast-9a260.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:363163883200:android:bc210c4b667ba39e57ff25",
+        "mobilesdk_app_id": "1:1014802281535:android:7b4fc7da831496da35348a",
         "android_client_info": {
-          "package_name": "com.livefooltballscore"
+          "package_name": "com.pulsescore"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDK_qBtcVZB9ALB_l22Aiki-0f9yVVvmHQ"
+          "current_key": "AIzaSyBeEmDkm0TG1FzIG1Jf8TwpEJouNZAv3vw"
         }
       ],
       "services": {

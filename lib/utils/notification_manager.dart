@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:awesome_notifications/awesome_notifications.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
-import 'package:pulsescore/utils/favorite_leagues.dart';
-import 'package:pulsescore/utils/favorite_matches.dart';
-import 'package:pulsescore/utils/favorite_teams.dart';
-import 'package:pulsescore/utils/models/league.dart';
-import 'package:pulsescore/utils/models/match.dart';
+import 'package:scorecast/utils/favorite_leagues.dart';
+import 'package:scorecast/utils/favorite_matches.dart';
+import 'package:scorecast/utils/favorite_teams.dart';
+import 'package:scorecast/utils/models/league.dart';
+import 'package:scorecast/utils/models/match.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'converters/match_converter.dart';
 import 'models/team.dart';

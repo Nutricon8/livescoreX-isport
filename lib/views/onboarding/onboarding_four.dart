@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pulsescore/utils/api_service.dart';
-import 'package:pulsescore/utils/colors.dart';
-import 'package:pulsescore/utils/favorite_leagues.dart';
-import 'package:pulsescore/utils/favorite_teams.dart';
-import 'package:pulsescore/utils/models/league.dart';
-import 'package:pulsescore/utils/models/team.dart';
-import 'package:pulsescore/widgets/custom_filled_button.dart';
-import 'package:pulsescore/widgets/custom_image.dart';
+import 'package:scorecast/utils/api_service.dart';
+import 'package:scorecast/utils/colors.dart';
+import 'package:scorecast/utils/favorite_leagues.dart';
+import 'package:scorecast/utils/favorite_teams.dart';
+import 'package:scorecast/utils/models/league.dart';
+import 'package:scorecast/utils/models/team.dart';
+import 'package:scorecast/widgets/custom_filled_button.dart';
+import 'package:scorecast/widgets/custom_image.dart';
 
 class OnboardingFour extends StatefulWidget {
   const OnboardingFour({super.key});

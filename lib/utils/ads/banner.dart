@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:pulsescore/utils/constants.dart';
+import 'package:scorecast/utils/constants.dart';
 
 class BannerAdWidget extends StatefulWidget {
   @override

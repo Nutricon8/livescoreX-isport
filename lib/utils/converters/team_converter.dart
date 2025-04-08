@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:pulsescore/utils/models/team.dart';
+import 'package:scorecast/utils/models/team.dart';
 
 class TeamConverter {
   static String encode(List<Team> teams) {

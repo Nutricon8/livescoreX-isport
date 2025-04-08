@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:pulsescore/utils/ads/banner.dart';
-import 'package:pulsescore/utils/ads/rewarded.dart';
-import 'package:pulsescore/utils/api_service.dart';
-import 'package:pulsescore/utils/favorite_matches.dart';
-import 'package:pulsescore/utils/json_leagues.dart';
-import 'package:pulsescore/utils/models/league.dart';
-import 'package:pulsescore/utils/models/match.dart';
-import 'package:pulsescore/utils/notification_manager.dart';
-import 'package:pulsescore/widgets/custom_drawer.dart';
-import 'package:pulsescore/widgets/league_card.dart';
-import 'package:pulsescore/widgets/live_item.dart';
+import 'package:scorecast/utils/ads/banner.dart';
+import 'package:scorecast/utils/ads/rewarded.dart';
+import 'package:scorecast/utils/api_service.dart';
+import 'package:scorecast/utils/favorite_matches.dart';
+import 'package:scorecast/utils/json_leagues.dart';
+import 'package:scorecast/utils/models/league.dart';
+import 'package:scorecast/utils/models/match.dart';
+import 'package:scorecast/utils/notification_manager.dart';
+import 'package:scorecast/widgets/custom_drawer.dart';
+import 'package:scorecast/widgets/league_card.dart';
+import 'package:scorecast/widgets/live_item.dart';
 
 class LivePage extends StatefulWidget {
   final Function(int) onItemTapped;

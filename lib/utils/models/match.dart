@@ -1,5 +1,5 @@
-import 'package:pulsescore/utils/models/league.dart';
-import 'package:pulsescore/utils/models/team.dart';
+import 'package:scorecast/utils/models/league.dart';
+import 'package:scorecast/utils/models/team.dart';
 
 class Match {
   final League league;

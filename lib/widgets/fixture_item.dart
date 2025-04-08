@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pulsescore/utils/ads/interstitial.dart';
-import 'package:pulsescore/utils/colors.dart';
-import 'package:pulsescore/utils/models/match.dart';
-import 'package:pulsescore/views/main/home/match_details_screen.dart';
-import 'package:pulsescore/widgets/custom_image.dart';
+import 'package:scorecast/utils/ads/interstitial.dart';
+import 'package:scorecast/utils/colors.dart';
+import 'package:scorecast/utils/models/match.dart';
+import 'package:scorecast/views/main/home/match_details_screen.dart';
+import 'package:scorecast/widgets/custom_image.dart';
 
 class FixtureItem extends StatelessWidget {
   final Match match;

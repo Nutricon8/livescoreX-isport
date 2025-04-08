@@ -1,7 +1,7 @@
-name: "pulsescore"
-description: "A new Flutter project."
+name: "scorecast"
+description: "Livescore mobile app"
 publish_to: "none"
-version: 0.1.0
+version: 0.2.0
 
 environment:
   sdk: ^3.7.0
@@ -40,12 +40,12 @@ dev_dependencies:
 flutter_launcher_icons: #flutter pub run flutter_launcher_icons
   android: true
   ios: true
-  image_path: "assets/logo5.png"  # Path to your icon image
-  adaptive_icon_foreground: "assets/logo5.png"  # For Android adaptive icons
+  image_path: "assets/scorecast.png"  # Path to your icon image
+  adaptive_icon_foreground: "assets/scorecast.png"  # For Android adaptive icons
   adaptive_icon_background: "#FFFFFF"
 
 launcher_name:
-  name: "PulseScore"
+  name: "scorecast"
 
 flutter:
   uses-material-design: true

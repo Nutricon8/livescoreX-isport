@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pulsescore/widgets/custom_image.dart';
+import 'package:scorecast/widgets/custom_image.dart';
 
 class StandingsCard extends StatelessWidget {
   final int position;

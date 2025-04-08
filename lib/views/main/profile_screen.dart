@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pulsescore/views/main/bottom_nav.dart';
-import 'package:pulsescore/widgets/bottom_sheet.dart';
-import 'package:pulsescore/widgets/custom_filled_button.dart';
-import 'package:pulsescore/widgets/custom_outlined_button.dart';
+import 'package:scorecast/views/main/bottom_nav.dart';
+import 'package:scorecast/widgets/bottom_sheet.dart';
+import 'package:scorecast/widgets/custom_filled_button.dart';
+import 'package:scorecast/widgets/custom_outlined_button.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

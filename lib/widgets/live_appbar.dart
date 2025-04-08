@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pulsescore/utils/colors.dart';
-import 'package:pulsescore/utils/format_date_time.dart';
-import 'package:pulsescore/utils/models/match.dart';
-import 'package:pulsescore/widgets/custom_image.dart';
+import 'package:scorecast/utils/colors.dart';
+import 'package:scorecast/utils/format_date_time.dart';
+import 'package:scorecast/utils/models/match.dart';
+import 'package:scorecast/widgets/custom_image.dart';
 
 class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Match match;

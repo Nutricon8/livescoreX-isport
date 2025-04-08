@@ -41,48 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDK_qBtcVZB9ALB_l22Aiki-0f9yVVvmHQ',
-    appId: '1:363163883200:android:bc210c4b667ba39e57ff25',
-    messagingSenderId: '363163883200',
-    projectId: 'pulsescore-a8722',
-    storageBucket: 'pulsescore-a8722.firebasestorage.app',
+    apiKey: 'AIzaSyBeEmDkm0TG1FzIG1Jf8TwpEJouNZAv3vw',
+    appId: '1:1014802281535:android:7b4fc7da831496da35348a',
+    messagingSenderId: '1014802281535',
+    projectId: 'scorecast-9a260',
+    storageBucket: 'scorecast-9a260.firebasestorage.app',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDMWt_05l2Kx3Ab-DdhDYqhbGx2oMG0N6c',
-    appId: '1:363163883200:web:207f27ccf05bfffb57ff25',
-    messagingSenderId: '363163883200',
-    projectId: 'pulsescore-a8722',
-    authDomain: 'pulsescore-a8722.firebaseapp.com',
-    storageBucket: 'pulsescore-a8722.firebasestorage.app',
-    measurementId: 'G-GFG7HZYVSP',
+    apiKey: 'AIzaSyB_yHmGH3dDmfZ9gjztzz1lBWqtGIcQoUA',
+    appId: '1:1014802281535:web:c0ab45f3c4072cf435348a',
+    messagingSenderId: '1014802281535',
+    projectId: 'scorecast-9a260',
+    authDomain: 'scorecast-9a260.firebaseapp.com',
+    storageBucket: 'scorecast-9a260.firebasestorage.app',
+    measurementId: 'G-NHZVF08RVB',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAK6r_M5N9kN3cfIbugWkzN1xKakjOvI24',
-    appId: '1:363163883200:ios:04df9eb1e19253ad57ff25',
-    messagingSenderId: '363163883200',
-    projectId: 'pulsescore-a8722',
-    storageBucket: 'pulsescore-a8722.firebasestorage.app',
-    iosBundleId: 'com.livefooltballscore',
+    apiKey: 'AIzaSyBC1kXC8fMncGt2ayK29Ef0Crt4UHdYIgE',
+    appId: '1:1014802281535:ios:002a106ff0b0d9a335348a',
+    messagingSenderId: '1014802281535',
+    projectId: 'scorecast-9a260',
+    storageBucket: 'scorecast-9a260.firebasestorage.app',
+    iosBundleId: 'com.pulsescore',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAK6r_M5N9kN3cfIbugWkzN1xKakjOvI24',
-    appId: '1:363163883200:ios:04df9eb1e19253ad57ff25',
-    messagingSenderId: '363163883200',
-    projectId: 'pulsescore-a8722',
-    storageBucket: 'pulsescore-a8722.firebasestorage.app',
-    iosBundleId: 'com.livefooltballscore',
+    apiKey: 'AIzaSyBC1kXC8fMncGt2ayK29Ef0Crt4UHdYIgE',
+    appId: '1:1014802281535:ios:002a106ff0b0d9a335348a',
+    messagingSenderId: '1014802281535',
+    projectId: 'scorecast-9a260',
+    storageBucket: 'scorecast-9a260.firebasestorage.app',
+    iosBundleId: 'com.pulsescore',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDMWt_05l2Kx3Ab-DdhDYqhbGx2oMG0N6c',
-    appId: '1:363163883200:web:27d0ea29f179246757ff25',
-    messagingSenderId: '363163883200',
-    projectId: 'pulsescore-a8722',
-    authDomain: 'pulsescore-a8722.firebaseapp.com',
-    storageBucket: 'pulsescore-a8722.firebasestorage.app',
-    measurementId: 'G-17V2SNJNYG',
+    apiKey: 'AIzaSyB_yHmGH3dDmfZ9gjztzz1lBWqtGIcQoUA',
+    appId: '1:1014802281535:web:7a41f4adc20b852035348a',
+    messagingSenderId: '1014802281535',
+    projectId: 'scorecast-9a260',
+    authDomain: 'scorecast-9a260.firebaseapp.com',
+    storageBucket: 'scorecast-9a260.firebasestorage.app',
+    measurementId: 'G-MECCGNJ6CE',
   );
 }
