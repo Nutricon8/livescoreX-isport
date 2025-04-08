@@ -1,5 +1,5 @@
-import 'package:scorecast/utils/converters/league_converter.dart';
-import 'package:scorecast/utils/models/league.dart';
+import 'package:livescorex/utils/converters/league_converter.dart';
+import 'package:livescorex/utils/models/league.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> saveLeagues(List<League> leagues) async {

@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:scorecast/utils/ads/banner.dart';
-import 'package:scorecast/views/main/home/favorites_screen.dart';
-import 'package:scorecast/views/main/home/home_page.dart';
-import 'package:scorecast/views/main/home/live_page.dart';
-import 'package:scorecast/views/main/profile_screen.dart';
+import 'package:livescorex/utils/ads/banner.dart';
+import 'package:livescorex/views/main/home/favorites_screen.dart';
+import 'package:livescorex/views/main/home/home_page.dart';
+import 'package:livescorex/views/main/home/live_page.dart';
+import 'package:livescorex/views/main/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BottomNavScreen extends StatefulWidget {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:scorecast/utils/colors.dart';
-import 'package:scorecast/utils/models/match.dart';
-import 'package:scorecast/views/main/home/match_details_screen.dart';
-import 'package:scorecast/widgets/custom_image.dart';
+import 'package:livescorex/utils/colors.dart';
+import 'package:livescorex/utils/models/match.dart';
+import 'package:livescorex/views/main/home/match_details_screen.dart';
+import 'package:livescorex/widgets/custom_image.dart';
 
 class FavoriteMatch extends StatelessWidget {
   final Match match;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:scorecast/utils/api_service.dart';
-import 'package:scorecast/utils/colors.dart';
-import 'package:scorecast/utils/models/match.dart';
-import 'package:scorecast/utils/models/player.dart';
-import 'package:scorecast/widgets/custom_image.dart';
+import 'package:livescorex/utils/api_service.dart';
+import 'package:livescorex/utils/colors.dart';
+import 'package:livescorex/utils/models/match.dart';
+import 'package:livescorex/utils/models/player.dart';
+import 'package:livescorex/widgets/custom_image.dart';
 
 class LineupTab extends StatefulWidget {
   final Match match;

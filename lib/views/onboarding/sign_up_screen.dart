@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:scorecast/utils/auth_service.dart';
-import 'package:scorecast/utils/colors.dart';
-import 'package:scorecast/widgets/custom_filled_button.dart';
+import 'package:livescorex/utils/auth_service.dart';
+import 'package:livescorex/utils/colors.dart';
+import 'package:livescorex/widgets/custom_filled_button.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});

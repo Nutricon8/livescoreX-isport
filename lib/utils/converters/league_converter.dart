@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:scorecast/utils/models/league.dart';
+import 'package:livescorex/utils/models/league.dart';
 
 class LeagueConverter {
   static String encode(List<League> leagues) {

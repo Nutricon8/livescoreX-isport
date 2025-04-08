@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:scorecast/utils/models/team.dart';
+import 'package:livescorex/utils/models/team.dart';
 
 class Player {
   final String name;

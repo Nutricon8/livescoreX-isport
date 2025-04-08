@@ -1,6 +1,6 @@
 {
-  "name": "scorecast",
-  "short_name": "scorecast",
+  "name": "livescorex",
+  "short_name": "livescorex",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0175C2",

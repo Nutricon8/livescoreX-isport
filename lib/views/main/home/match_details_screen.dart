@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:scorecast/utils/ads/banner.dart';
-import 'package:scorecast/views/main/home/tabs/lineup_tab.dart';
-import 'package:scorecast/views/main/home/tabs/matches_tab.dart';
-import 'package:scorecast/views/main/home/tabs/standings_tab.dart';
-import 'package:scorecast/widgets/custom_appbar.dart';
-import 'package:scorecast/utils/models/match.dart';
+import 'package:livescorex/utils/ads/banner.dart';
+import 'package:livescorex/views/main/home/tabs/lineup_tab.dart';
+import 'package:livescorex/views/main/home/tabs/matches_tab.dart';
+import 'package:livescorex/views/main/home/tabs/standings_tab.dart';
+import 'package:livescorex/widgets/custom_appbar.dart';
+import 'package:livescorex/utils/models/match.dart';
 
 class MatchDetailsScreen extends StatelessWidget {
   final Match match;

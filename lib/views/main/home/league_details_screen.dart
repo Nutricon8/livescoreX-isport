@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:scorecast/views/main/home/tabs/standings_tab.dart';
-import 'package:scorecast/widgets/league_appbar.dart';
-import 'package:scorecast/utils/models/league.dart';
+import 'package:livescorex/views/main/home/tabs/standings_tab.dart';
+import 'package:livescorex/widgets/league_appbar.dart';
+import 'package:livescorex/utils/models/league.dart';
 
 class LeagueDetailsScreen extends StatefulWidget {
   final League league;

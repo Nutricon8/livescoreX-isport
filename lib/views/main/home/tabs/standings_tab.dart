@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:scorecast/utils/api_service.dart';
-import 'package:scorecast/utils/models/standing.dart';
+import 'package:livescorex/utils/api_service.dart';
+import 'package:livescorex/utils/models/standing.dart';
 
 import '../../../../widgets/standing_card.dart';
 

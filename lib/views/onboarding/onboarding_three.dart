@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:scorecast/widgets/custom_filled_button.dart';
+import 'package:livescorex/widgets/custom_filled_button.dart';
 
 class OnboardingThree extends StatelessWidget {
   const OnboardingThree({super.key});
@@ -27,7 +27,7 @@ class OnboardingThree extends StatelessWidget {
               spacing: 16,
               children: const [
                 Text(
-                  'Welcome to ScoreCast',
+                  'Welcome to LivescoreX',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                   textAlign: TextAlign.center,
                 ),

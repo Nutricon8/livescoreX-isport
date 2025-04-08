@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:scorecast/utils/ads/banner.dart';
-import 'package:scorecast/utils/api_service.dart';
-import 'package:scorecast/utils/models/match.dart';
-import 'package:scorecast/widgets/match_card.dart';
+import 'package:livescorex/utils/ads/banner.dart';
+import 'package:livescorex/utils/api_service.dart';
+import 'package:livescorex/utils/models/match.dart';
+import 'package:livescorex/widgets/match_card.dart';
 
 class MatchesTab extends StatefulWidget {
   final Match match;

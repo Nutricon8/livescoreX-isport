@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:scorecast/widgets/custom_filled_button.dart';
+import 'package:livescorex/widgets/custom_filled_button.dart';
 
 class RemoveTeamBottomSheet extends StatelessWidget {
   final VoidCallback onConfirm;

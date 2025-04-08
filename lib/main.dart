@@ -7,23 +7,23 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:scorecast/firebase_options.dart';
-import 'package:scorecast/utils/ads/app_open.dart';
-import 'package:scorecast/utils/api_service.dart';
-import 'package:scorecast/utils/colors.dart';
-import 'package:scorecast/utils/models/league.dart';
-import 'package:scorecast/utils/models/match.dart';
-import 'package:scorecast/utils/models/team.dart';
-import 'package:scorecast/utils/notification_manager.dart';
-import 'package:scorecast/utils/theme_provider.dart';
-import 'package:scorecast/views/main/bottom_nav.dart';
-import 'package:scorecast/views/main/home/live_match_details.dart';
-import 'package:scorecast/views/main/settings_screen.dart';
-import 'package:scorecast/views/onboarding/onboarding_four.dart';
-import 'package:scorecast/views/onboarding/onboarding_one.dart';
-import 'package:scorecast/views/onboarding/onboarding_three.dart';
-import 'package:scorecast/views/onboarding/sign_in_screen.dart';
-import 'package:scorecast/views/onboarding/sign_up_screen.dart';
+import 'package:livescorex/firebase_options.dart';
+import 'package:livescorex/utils/ads/app_open.dart';
+import 'package:livescorex/utils/api_service.dart';
+import 'package:livescorex/utils/colors.dart';
+import 'package:livescorex/utils/models/league.dart';
+import 'package:livescorex/utils/models/match.dart';
+import 'package:livescorex/utils/models/team.dart';
+import 'package:livescorex/utils/notification_manager.dart';
+import 'package:livescorex/utils/theme_provider.dart';
+import 'package:livescorex/views/main/bottom_nav.dart';
+import 'package:livescorex/views/main/home/live_match_details.dart';
+import 'package:livescorex/views/main/settings_screen.dart';
+import 'package:livescorex/views/onboarding/onboarding_four.dart';
+import 'package:livescorex/views/onboarding/onboarding_one.dart';
+import 'package:livescorex/views/onboarding/onboarding_three.dart';
+import 'package:livescorex/views/onboarding/sign_in_screen.dart';
+import 'package:livescorex/views/onboarding/sign_up_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -234,7 +234,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'ScoreCast',
+      title: 'LivescoreX',
       themeMode:
           Provider.of<ThemeProvider>(context).isDarkMode
               ? ThemeMode.dark

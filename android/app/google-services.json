@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "1014802281535",
-    "project_id": "scorecast-9a260",
-    "storage_bucket": "scorecast-9a260.firebasestorage.app"
+    "project_number": "669293514358",
+    "project_id": "livescorex-7e4f6",
+    "storage_bucket": "livescorex-7e4f6.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1014802281535:android:7b4fc7da831496da35348a",
+        "mobilesdk_app_id": "1:669293514358:android:fe7beb39abe5a329095957",
         "android_client_info": {
-          "package_name": "com.pulsescore"
+          "package_name": "com.livescorex"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBeEmDkm0TG1FzIG1Jf8TwpEJouNZAv3vw"
+          "current_key": "AIzaSyAHgiCcuBS2Ad95zqPEEZHPxkN0Op0YgHo"
         }
       ],
       "services": {

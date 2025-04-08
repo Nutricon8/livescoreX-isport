@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:scorecast/utils/api_service.dart';
-import 'package:scorecast/utils/models/match.dart';
-import 'package:scorecast/utils/models/match_event.dart';
+import 'package:livescorex/utils/api_service.dart';
+import 'package:livescorex/utils/models/match.dart';
+import 'package:livescorex/utils/models/match_event.dart';
 
 class SummaryTab extends StatelessWidget {
   final Match liveMatch;
