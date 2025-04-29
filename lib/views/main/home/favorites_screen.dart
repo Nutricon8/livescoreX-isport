@@ -2,11 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:livescorex/utils/favorite_leagues.dart';
 import 'package:livescorex/utils/favorite_matches.dart';
 import 'package:livescorex/utils/favorite_teams.dart';
+import 'package:livescorex/utils/models/league.dart';
 import 'package:livescorex/utils/models/match.dart';
 import 'package:livescorex/utils/models/team.dart';
 import 'package:livescorex/views/main/bottom_nav.dart';
+import 'package:livescorex/widgets/favorite_league.dart';
 import 'package:livescorex/widgets/favorite_match.dart';
 import 'package:livescorex/widgets/favorite_team.dart';
 
@@ -20,6 +23,7 @@ class FavoritesScreen extends StatefulWidget {
 class FavoritesScreenState extends State<FavoritesScreen> {
   List<Match> _savedMatches = []; // Store matches in state
   List<Team> _savedTeams = [];
+  List<League> _savedCompetitions = [];
 
   @override
   void initState() {
@@ -31,9 +35,11 @@ class FavoritesScreenState extends State<FavoritesScreen> {
   void _loadMatches() async {
     List<Match> matches = await getMatches();
     List<Team> teams = await getTeams();
+    List<League> leagues = await getLeagues();
     setState(() {
       _savedMatches = matches;
       _savedTeams = teams;
+      _savedCompetitions = leagues;
     });
   }
 
@@ -63,7 +69,11 @@ class FavoritesScreenState extends State<FavoritesScreen> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: TabBar(
-                tabs: [Tab(text: 'Matches'), Tab(text: 'My Teams')],
+                tabs: [
+                  Tab(text: 'Matches'),
+                  Tab(text: 'My Teams'),
+                  Tab(text: 'Competitions'),
+                ],
                 dividerColor: Colors.transparent,
                 isScrollable: true,
               ),
@@ -72,7 +82,11 @@ class FavoritesScreenState extends State<FavoritesScreen> {
         ),
 
         body: TabBarView(
-          children: [_buildMatchesTab(context), _buildMyTeamsTab(context)],
+          children: [
+            _buildMatchesTab(context),
+            _buildMyTeamsTab(context),
+            _buildCompetitionsTab(context),
+          ],
         ),
       ),
     );
@@ -139,6 +153,50 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                         await deleteTeam(team.id),
                         setState(() {
                           _savedTeams.removeWhere((m) => m.id == team.id);
+                        }),
+                      },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompetitionsTab(BuildContext context) {
+    if (_savedTeams.isEmpty) {
+      return Center(child: Text('No favorite competitions'));
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 5.0),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Text(
+                'COMPETITIONS',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          Expanded(
+            // Ensures ListView gets proper height
+            child: ListView.builder(
+              itemCount: _savedCompetitions.length,
+              itemBuilder: (context, index) {
+                League league = _savedCompetitions[index];
+                return FavoriteLeague(
+                  league: league,
+                  onRemove:
+                      () async => {
+                        await deleteLeague(league.id),
+                        setState(() {
+                          _savedCompetitions.removeWhere(
+                            (m) => m.id == league.id,
+                          );
                         }),
                       },
                 );

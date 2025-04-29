@@ -512,7 +512,7 @@ class ApiService {
 
           // Assign predefined position based on team
           Offset gridOffset = Offset.zero;
-          if (team.id == firstTeam?.id &&
+          if (team.id == firstTeam.id &&
               firstTeamIndex < firstTeamPositions.length) {
             gridOffset = firstTeamPositions[firstTeamIndex++];
           } else if (team.id == secondTeam?.id &&

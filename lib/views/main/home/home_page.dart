@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:livescorex/utils/ads/banner.dart';
 import 'package:livescorex/utils/ads/interstitial.dart';
+import 'package:livescorex/utils/ads/rewarded.dart';
 import 'package:livescorex/utils/api_service.dart';
 import 'package:livescorex/utils/favorite_matches.dart';
 import 'package:livescorex/utils/json_leagues.dart';
@@ -10,6 +11,7 @@ import 'package:livescorex/utils/models/match.dart';
 import 'package:livescorex/widgets/custom_drawer.dart';
 import 'package:livescorex/widgets/fixture_item.dart';
 import 'package:livescorex/widgets/league_card.dart';
+import 'package:livescorex/widgets/live_item.dart';
 import '../../../widgets/DateScrollWidget.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,6 +27,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   bool get wantKeepAlive => true;
 
   final InterstitialAdHelper adHelper = InterstitialAdHelper();
+  final RewardedAdHelper rewardedAdHelper = RewardedAdHelper();
   late Map<int, List<Match>> groupedMatches = {};
 
   int? selectedLeague;
@@ -46,6 +49,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
     Future.microtask(() async {
       await fetchMatches();
       adHelper.loadAd();
+      rewardedAdHelper.loadAd();
     });
     loadFavoriteMatches();
   }
@@ -262,6 +266,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                   favoriteMatchIds,
                                   toggleFavorite,
                                   adHelper,
+                                  rewardedAdHelper,
                                 );
                               }, childCount: filteredMatches.length),
                             ),
@@ -278,6 +283,7 @@ Widget _buildMatchesTab(
   List<int> favoriteMatchIds,
   Function(Match) toggleFavorite,
   InterstitialAdHelper adHelper,
+  RewardedAdHelper rewardedAdHelper,
 ) {
   if (matches.isEmpty) return SizedBox();
   Match firstMatch = matches.first;
@@ -296,12 +302,22 @@ Widget _buildMatchesTab(
           itemCount: matches.length,
           itemBuilder: (context, index) {
             Match match = matches[index];
-            return FixtureItem(
-              match: match,
-              isFavorite: favoriteMatchIds.contains(matches[index].id),
-              onFavoriteToggle: toggleFavorite,
-              adHelper: adHelper,
-            );
+
+            if (["LIVE", "HT", "2H"].contains(match.short)) {
+              return LiveItem(
+                match: match,
+                isFavorite: favoriteMatchIds.contains(matches[index].id),
+                onFavoriteToggle: toggleFavorite,
+                rewardedAdHelper: rewardedAdHelper,
+              );
+            } else {
+              return FixtureItem(
+                match: match,
+                isFavorite: favoriteMatchIds.contains(matches[index].id),
+                onFavoriteToggle: toggleFavorite,
+                adHelper: adHelper,
+              );
+            }
           },
         ),
       ],

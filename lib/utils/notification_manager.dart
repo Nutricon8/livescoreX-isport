@@ -54,7 +54,7 @@ Future<void> checkMatchUpdates(List<Match> liveMatches) async {
       if (match.short == "HT" && previousMatch.short != "HT") {
         _sendGoalNotification(
           "Half Time!",
-          "${match.home.name} 🆚 ${match.away.name}",
+          "${match.home.name} ${match.homeScore}  🆚 ${match.awayScore} ${match.away.name}",
           match,
         );
       }
@@ -76,7 +76,7 @@ Future<void> checkMatchUpdates(List<Match> liveMatches) async {
                 : "Match Finished!";
         _sendGoalNotification(
           message,
-          "${match.home.name} 🆚 ${match.away.name}",
+          "${match.home.name} ${match.homeScore}  🆚 ${match.awayScore} ${match.away.name}",
           match,
         );
       }
