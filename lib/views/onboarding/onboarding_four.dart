@@ -44,13 +44,13 @@ class OnboardingFourState extends State<OnboardingFour> {
   Future<void> fetchTeams() async {
     setState(() => isLoading = true);
     try {
-      final fetchedTeams = await ApiService().getAllTeams();
+      final fetchedTeams = await ApiService().getAllTeams(leagueId: '36');
       setState(() {
         _teams = fetchedTeams;
         isLoading = false;
       });
     } catch (e, st) {
-      print('FETCH TEAMS ERROR: $e\n$st');  // 👈 you will now see the real error
+      print('FETCH TEAMS ERROR: $e\n$st'); // 👈 you will now see the real error
       setState(() => isLoading = false);
     }
   }
@@ -73,10 +73,9 @@ class OnboardingFourState extends State<OnboardingFour> {
       }
     });
 
-    List<Team> teams =
-        favoriteTeamIds
-            .map((id) => _teams.firstWhere((t) => t.teamId == id))
-            .toList();
+    List<Team> teams = favoriteTeamIds
+        .map((id) => _teams.firstWhere((t) => t.teamId == id))
+        .toList();
     await saveTeams(teams);
   }
 
@@ -90,10 +89,9 @@ class OnboardingFourState extends State<OnboardingFour> {
     });
 
     final leaguesList = await _leaguesFuture; // ✅ Await the future
-    List<League> leagues =
-        favoriteLeagueIds
-            .map((id) => leaguesList.firstWhere((l) => l.leagueId == id))
-            .toList();
+    List<League> leagues = favoriteLeagueIds
+        .map((id) => leaguesList.firstWhere((l) => l.leagueId == id))
+        .toList();
 
     await saveLeagues(leagues);
   }
@@ -138,7 +136,6 @@ class OnboardingFourState extends State<OnboardingFour> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
             ),
-
             FutureBuilder<List<League>>(
               future: _leaguesFuture,
               builder: (context, snapshot) {
@@ -170,7 +167,6 @@ class OnboardingFourState extends State<OnboardingFour> {
                               scale: scale,
                               child: LeagueLogo(
                                 league: league,
-
                                 isFavorite: favoriteLeagueIds.contains(
                                   league.leagueId,
                                 ),
@@ -191,10 +187,9 @@ class OnboardingFourState extends State<OnboardingFour> {
                           width: _currentPage.round() == index ? 12 : 8,
                           height: 4,
                           decoration: BoxDecoration(
-                            color:
-                                _currentPage.round() == index
-                                    ? Theme.of(context).colorScheme.onSurface
-                                    : Theme.of(context).colorScheme.onSecondary,
+                            color: _currentPage.round() == index
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context).colorScheme.onSecondary,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -204,39 +199,35 @@ class OnboardingFourState extends State<OnboardingFour> {
                 );
               },
             ),
-
             const SizedBox(height: 8),
-
             Expanded(
-              child:
-                  isLoading
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    ) // ✅ Loading state
+                  : _teams.isEmpty
                       ? const Center(
-                        child: CircularProgressIndicator(),
-                      ) // ✅ Loading state
-                      : _teams.isEmpty
-                      ? const Center(
-                        child: Text("No teams available"),
-                      ) // ✅ Handle empty state
+                          child: Text("No teams available"),
+                        ) // ✅ Handle empty state
                       : ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        itemCount: _teams.length,
-                        itemBuilder: (context, index) {
-                          Team team = _teams[index];
-                          return TeamTile(
-                            team: team,
-                            isFavorite: favoriteTeamIds.contains(team.teamId),
-                            onFavoriteToggle: toggleFavorite,
-                          );
-                        },
-                      ),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          itemCount: _teams.length,
+                          itemBuilder: (context, index) {
+                            Team team = _teams[index];
+                            return TeamTile(
+                              team: team,
+                              isFavorite: favoriteTeamIds.contains(team.teamId),
+                              onFavoriteToggle: toggleFavorite,
+                            );
+                          },
+                        ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(20),
               child: CustomFilledButton(
                 text: 'Next',
-                onPressed:
-                    () => Navigator.pushReplacementNamed(context, "/main"),
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, "/main"),
               ),
             ),
           ],
@@ -287,7 +278,6 @@ class LeagueLogo extends StatelessWidget {
                       height: double.infinity,
                       isFilled: true,
                     ),
-
                     Positioned(
                       bottom: 2,
                       right: 2,

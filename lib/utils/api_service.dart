@@ -1,6 +1,7 @@
 import 'dart:convert';
+
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:livescorex/utils/models/league.dart';
 import 'package:livescorex/utils/models/match.dart';
 import 'package:livescorex/utils/models/match_event.dart';
@@ -10,29 +11,29 @@ import 'package:livescorex/utils/models/standing.dart';
 import 'package:livescorex/utils/models/team.dart';
 
 class ApiService {
-  static const String _baseUrl = "https://api.isportsapi.com";
-  static const String _apiKey = "ycOrrj2NLYdzuOBr";
+  // Your Railway-deployed Express proxy. CORS is handled there — no key needed here.
+  static const String _baseUrl = 'https://isport-api-production.up.railway.app';
 
   final int currentSeason = DateTime.now().year - 1;
 
   final Dio _dio = Dio(
     BaseOptions(
-        baseUrl: _baseUrl,
-        queryParameters: {'api_key': _apiKey},
-       // responseType: ResponseType.plain, // 👈 ADD THIS
+      baseUrl: _baseUrl,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
     ),
   );
 
-  // Generic response handler
-  dynamic _handleResponse(Response response) {
-    print('RAW API RESPONSE: ${response.data}'); // 👈 Add this line
-    final raw = response.data;
+  // ---------------------------------------------------------------------------
+  // Response handling — the PROXY envelope is {success, source, data, timestamp}
+  // ---------------------------------------------------------------------------
 
+  dynamic _handleResponse(Response response) {
+    final raw = response.data;
     if (raw == null) {
-      throw Exception('Empty response from API');
+      throw Exception('Empty response from proxy');
     }
 
-    // Dio sometimes hands us a String (raw JSON) instead of a decoded Map.
     final Map<String, dynamic> body;
     if (raw is String) {
       final decoded = jsonDecode(raw);
@@ -46,11 +47,11 @@ class ApiService {
       throw Exception('Unexpected response type: ${raw.runtimeType}');
     }
 
-    // Tolerate code as int OR String (iSportsAPI returns both).
-    final code = _asInt(body['code']);
-    if (code != 0) {
+    // Proxy envelope uses `success` (bool), not iSportsAPI's `code` (int).
+    final success = body['success'];
+    if (success != true) {
       throw Exception(
-        body['message']?.toString() ?? 'Unknown API Error (code: $code)',
+        body['error']?.toString() ?? 'Unknown proxy error',
       );
     }
 
@@ -65,62 +66,150 @@ class ApiService {
     return null;
   }
 
-  // Fetch Leagues - CORRECTED PATH
+  Never _logAndRethrow(String method, DioException e) {
+    debugPrint(
+      '$method DioException type=${e.type} '
+      'status=${e.response?.statusCode} '
+      'message=${e.message}',
+    );
+    throw Exception('$method failed: ${e.message ?? e.type.name}');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Leagues — proxy route: /api/isports/leagues
+  // ---------------------------------------------------------------------------
+
   Future<List<League>> getLeagues() async {
     try {
-      final response = await _dio.get('/sport/football/league/basic');
+      final response = await _dio.get('/api/isports/leagues');
       final data = _handleResponse(response);
-      return (data as List).map((json) => League.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception("Error fetching leagues: $e");
+      return (data as List)
+          .map((json) => League.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      _logAndRethrow('getLeagues', e);
+    } catch (e, st) {
+      debugPrint('getLeagues error: $e\n$st');
+      throw Exception('Error fetching leagues: $e');
     }
   }
 
-  // Fetch Matches - CORRECTED PATH
+  // ---------------------------------------------------------------------------
+  // Matches — proxy route: /api/isports/livescores
+  // ---------------------------------------------------------------------------
+
   Future<List<Match>> getLiveMatches(bool live) async {
     try {
-      final response = await _dio.get('/sport/football/livescores');
+      final response = await _dio.get('/api/isports/livescores');
       final data = _handleResponse(response);
-      return (data as List).map((json) => Match.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception("Error fetching live matches: $e");
+      return (data as List)
+          .map((json) => Match.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      _logAndRethrow('getLiveMatches', e);
+    } catch (e, st) {
+      debugPrint('getLiveMatches error: $e\n$st');
+      throw Exception('Error fetching live matches: $e');
     }
   }
 
   Future<List<Match>> getDateFixtures(String date) async {
     try {
       final response = await _dio.get(
-        '/sport/football/schedule',
+        '/api/isports/schedule',
         queryParameters: {'date': date},
       );
       final data = _handleResponse(response);
-      return (data as List).map((json) => Match.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception("Error fetching live matches: $e");
+      return (data as List)
+          .map((json) => Match.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      _logAndRethrow('getDateFixtures', e);
+    } catch (e, st) {
+      debugPrint('getDateFixtures error: $e\n$st');
+      throw Exception('Error fetching fixtures for $date: $e');
     }
   }
 
-  Future<List<Team>> getAllTeams() async {
+  // ---------------------------------------------------------------------------
+  // Teams — proxy route: /api/isports/teams
+  // ---------------------------------------------------------------------------
+
+  Future<List<Team>> getAllTeams({required String leagueId}) async {
     try {
-      final response = await _dio.get('/sport/football/team');
+      final response = await _dio.get(
+        '/api/isports/teams',
+        queryParameters: {'leagueId': leagueId},
+      );
       final data = _handleResponse(response);
 
-      // data is already the list of teams
       if (data is! List) {
-        throw Exception("Unexpected data format: expected a List, got ${data.runtimeType}");
+        throw Exception(
+          'Unexpected data format: expected a List, '
+          'got ${data.runtimeType}',
+        );
       }
 
-      return data.map((json) => Team.fromJson(json as Map<String, dynamic>)).toList();
-    } catch (e) {
-      throw Exception("Error fetching teams: $e");
+      return data
+          .map((json) => Team.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      _logAndRethrow('getAllTeams', e);
+    } catch (e, st) {
+      debugPrint('getAllTeams error: $e\n$st');
+      throw Exception('Error fetching teams for league $leagueId: $e');
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Standings — proxy route: /api/isports/standings
+  //
+  // The proxy already reshapes {teamInfos, totalStandings} into a flat list
+  // of standing rows with teamName/teamLogo merged in. No lookup needed here.
+  // ---------------------------------------------------------------------------
 
   Future<List<Standing>> getStandings(String leagueId) async {
     try {
       final response = await _dio.get(
-        '/sport/football/standing/league',
+        '/api/isports/standings',
         queryParameters: {'leagueId': leagueId},
+      );
+      final data = _handleResponse(response);
+
+      if (data is! List) {
+        throw Exception('Expected List, got ${data.runtimeType}');
+      }
+
+      // The proxy flattens each row, so we pass an empty lookup map.
+      return data
+          .whereType<Map>()
+          .map(
+            (e) => Standing.fromJson(
+              Map<String, dynamic>.from(e),
+              const {},
+            ),
+          )
+          .toList();
+    } on DioException catch (e) {
+      _logAndRethrow('getStandings', e);
+    } catch (e, st) {
+      debugPrint('getStandings error: $e\n$st');
+      throw Exception('Error fetching standings: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lineups — proxy route: /api/isports/lineups
+  //
+  // The proxy returns {home, away, homeBackup, awayBackup, homeFormation, awayFormation}
+  // instead of iSportsAPI's raw array. Simpler to consume here.
+  // ---------------------------------------------------------------------------
+
+  Future<List<Player>> getLineups(String matchId) async {
+    try {
+      final response = await _dio.get(
+        '/api/isports/lineups',
+        queryParameters: {'matchId': matchId},
       );
       final data = _handleResponse(response);
 
@@ -128,90 +217,49 @@ class ApiService {
         throw Exception('Expected Map, got ${data.runtimeType}');
       }
 
-      // Build teamId -> teamInfo lookup from data['teamInfos'].
-      final teamInfos = (data['teamInfos'] as List?) ?? const [];
-      final Map<String, Map<String, dynamic>> teamsById = {
-        for (final t in teamInfos.whereType<Map>())
-          t['teamId'].toString(): Map<String, dynamic>.from(t),
-      };
+      final players = <Player>[];
 
-      // Parse data['totalStandings'] using the lookup.
-      final standingsRaw = (data['totalStandings'] as List?) ?? const [];
-      return standingsRaw
-          .whereType<Map>()
-          .map((e) => Standing.fromJson(Map<String, dynamic>.from(e), teamsById))
-          .toList();
-    } catch (e, st) {
-      debugPrint('getStandings error: $e\n$st');
-      throw Exception('Error fetching standings: $e');
-    }
-  }
-  Future<List<Player>> getLineups(String matchId) async {
-    try {
-      final response = await _dio.get(
-        '/sport/football/lineups',
-        queryParameters: {'matchId': matchId},
+      _appendLineupPlayers(
+        players,
+        data['home'],
+        teamId: 'home',
+        isSubstitute: false,
       );
-      final data = _handleResponse(response);
-
-      final List<Player> players = [];
-
-      if (data is List) {
-        for (final matchData in data.whereType<Map>()) {
-          final homeFormation = matchData['homeFormation']?.toString();
-          final awayFormation = matchData['awayFormation']?.toString();
-
-          // We don't know the teamId from the lineup entry itself —
-          // iSportsAPI returns homeLineup / awayLineup as separate arrays,
-          // so we tag them when constructing the Player.
-          _appendLineupPlayers(
-            players,
-            matchData['homeLineup'],
-            teamId: 'home',          // placeholder; LineupTab re-groups by these tags
-            formation: homeFormation,
-            isSubstitute: false,
-          );
-          _appendLineupPlayers(
-            players,
-            matchData['awayLineup'],
-            teamId: 'away',
-            formation: awayFormation,
-            isSubstitute: false,
-          );
-          _appendLineupPlayers(
-            players,
-            matchData['homeBackup'],
-            teamId: 'home',
-            formation: homeFormation,
-            isSubstitute: true,
-          );
-          _appendLineupPlayers(
-            players,
-            matchData['awayBackup'],
-            teamId: 'away',
-            formation: awayFormation,
-            isSubstitute: true,
-          );
-        }
-      }
+      _appendLineupPlayers(
+        players,
+        data['away'],
+        teamId: 'away',
+        isSubstitute: false,
+      );
+      _appendLineupPlayers(
+        players,
+        data['homeBackup'],
+        teamId: 'home',
+        isSubstitute: true,
+      );
+      _appendLineupPlayers(
+        players,
+        data['awayBackup'],
+        teamId: 'away',
+        isSubstitute: true,
+      );
 
       return players;
+    } on DioException catch (e) {
+      _logAndRethrow('getLineups', e);
     } catch (e, st) {
       debugPrint('getLineups error: $e\n$st');
       throw Exception('Error fetching lineups: $e');
     }
   }
 
-  /// Converts raw lineup entries into [Player] objects using the constructor
-  /// directly (bypassing [Player.fromJson] because the lineup response only
-  /// contains a subset of the fields the model requires).
   void _appendLineupPlayers(
-      List<Player> out,
-      dynamic lineupRaw, {
-        required String teamId,
-        String? formation,
-        required bool isSubstitute,
-      }) {
+    List<Player> out,
+    dynamic lineupRaw, {
+    required String teamId,
+    String? formation,
+    required bool isSubstitute,
+  }) {
     if (lineupRaw is! List) return;
 
     for (final entry in lineupRaw.whereType<Map>()) {
@@ -222,15 +270,12 @@ class ApiService {
 
       out.add(
         Player(
-          // --- fields provided by the lineup endpoint ---
-          recordId: playerId,       // no separate recordId — reuse playerId
+          recordId: playerId,
           playerId: playerId,
           name: name,
           number: number,
-          teamId: teamId,           // 'home' or 'away' — see LineupTab below
+          teamId: teamId,
           position: _positionLabel(position),
-
-          // --- required fields we don't have; use safe defaults ---
           birthday: '',
           height: 0,
           country: '',
@@ -240,8 +285,6 @@ class ApiService {
           value: 0,
           introduce: '',
           contractEndDate: '',
-
-          // Optional fields
           pac: null,
           sho: null,
           pas: null,
@@ -269,44 +312,53 @@ class ApiService {
     }
   }
 
-  // Fetch Match Statistics - CORRECTED path
+  // ---------------------------------------------------------------------------
+  // Match statistics — proxy route: /api/isports/stats
+  //
+  // The proxy already pairs home/away stats into rows of {type, home, away},
+  // so we don't need the "length < 2" check anymore.
+  // ---------------------------------------------------------------------------
+
   Future<List<MatchStatistics>> getMatchStatistics(String matchId) async {
     try {
       final response = await _dio.get(
-        '/sport/football/events/stats',
+        '/api/isports/stats',
         queryParameters: {'matchId': matchId},
       );
       final data = _handleResponse(response);
 
-      if (data is! List || data.length < 2) {
-        throw Exception("Incomplete statistics data");
+      if (data is! List) {
+        throw Exception('Expected List, got ${data.runtimeType}');
       }
 
-      List<MatchStatistics> stats = [];
-      final homeStats = data[0]['statistics'] as List? ?? [];
-      final awayStats = data[1]['statistics'] as List? ?? [];
-
-      for (int i = 0; i < homeStats.length; i++) {
-        stats.add(
-          MatchStatistics(
-            type: homeStats[i]['type'] as int?,
-            home: homeStats[i]['value']?.toString(),
-            away:
-                awayStats.length > i ? awayStats[i]['value']?.toString() : null,
-          ),
-        );
-      }
-      return stats;
-    } catch (e) {
-      throw Exception("Error fetching match statistics: $e");
+      return data
+          .whereType<Map>()
+          .map(
+            (row) => MatchStatistics(
+              type: _asInt(row['type']),
+              home: row['home']?.toString(),
+              away: row['away']?.toString(),
+            ),
+          )
+          .toList();
+    } on DioException catch (e) {
+      _logAndRethrow('getMatchStatistics', e);
+    } catch (e, st) {
+      debugPrint('getMatchStatistics error: $e\n$st');
+      throw Exception('Error fetching match statistics: $e');
     }
   }
 
-  // Fetch Match Events - CORRECTED path and mapping
+  // ---------------------------------------------------------------------------
+  // Match events — proxy route: /api/isports/events
+  //
+  // The proxy already flattens player/assist into top-level fields.
+  // ---------------------------------------------------------------------------
+
   Future<List<MatchEvent>> getMatchEvents(String matchId) async {
     try {
       final response = await _dio.get(
-        '/sport/football/events',
+        '/api/isports/events',
         queryParameters: {'matchId': matchId},
       );
       final data = _handleResponse(response);
@@ -314,17 +366,20 @@ class ApiService {
       return (data as List).map((event) {
         return MatchEvent(
           eventId: event['eventId']?.toString() ?? '',
-          minute: event['time']?['elapsed']?.toString(),
-          type: event['type'] as int?,
-          playerId: event['player']?['id']?.toString(),
-          playerName: event['player']?['name'] as String?,
-          assistPlayerId: event['assist']?['id']?.toString(),
-          homeEvent: false, // Determine from teamId comparison if needed
+          minute: event['minute']?.toString(),
+          type: _asInt(event['type']),
+          playerId: event['playerId']?.toString(),
+          playerName: event['playerName'] as String?,
+          assistPlayerId: event['assistPlayerId']?.toString(),
+          homeEvent: false,
           isFavorite: false,
         );
       }).toList();
-    } catch (e) {
-      throw Exception("Error fetching match events: $e");
+    } on DioException catch (e) {
+      _logAndRethrow('getMatchEvents', e);
+    } catch (e, st) {
+      debugPrint('getMatchEvents error: $e\n$st');
+      throw Exception('Error fetching match events: $e');
     }
   }
 }
