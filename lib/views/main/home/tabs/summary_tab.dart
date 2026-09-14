@@ -11,7 +11,7 @@ class SummaryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<MatchEvent>>(
-      future: ApiService().getMatchSummary(liveMatch.id),
+      future: ApiService().getMatchEvents(liveMatch.matchId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -58,7 +58,7 @@ class SummaryEvent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isHomeTeam = matchEvent.teamId == liveMatch.home.id;
+    bool isHomeTeam = matchEvent.homeEvent;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -80,10 +80,10 @@ class SummaryEvent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  "${matchEvent.time}'",
+                  "${matchEvent.minute}'",
                   style: const TextStyle(fontSize: 14),
                 ),
-                if (matchEvent.eventType == "Goal")
+                if (matchEvent.type == 1)
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
@@ -121,15 +121,15 @@ class SummaryEvent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                matchEvent.playerName,
+                matchEvent.playerName ?? '',
                 style: const TextStyle(fontSize: 14),
                 maxLines: 1, // Limits text to one line
                 overflow:
                     TextOverflow.ellipsis, // Adds "..." if text is too long
               ),
-              if (matchEvent.assistPlayer.isNotEmpty)
+              if (matchEvent.assistPlayerId != null)
                 Text(
-                  matchEvent.assistPlayer,
+                  '', //matchEvent.assistPlayer,
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -139,22 +139,17 @@ class SummaryEvent extends StatelessWidget {
         ),
 
         /// **Event Icon**
-        if (matchEvent.eventType == "Card")
-          Icon(
-            FontAwesomeIcons.solidSquare,
-            color:
-                matchEvent.eventDetail == "Yellow Card"
-                    ? Colors.yellow
-                    : Colors.red,
-            size: 14,
-          )
-        else if (matchEvent.eventType == "subst")
-          const Icon(FontAwesomeIcons.arrowRightArrowLeft, size: 14)
-        else if (matchEvent.eventType == "Goal")
-          const Icon(FontAwesomeIcons.futbol, size: 14)
+        /*if (matchEvent.type == 2)
+          Icon(FontAwesomeIcons.solidSquare as IconData?, color: Colors.red, size: 14)
+        else if (matchEvent.type == 3)
+          Icon(FontAwesomeIcons.solidSquare as IconData?, color: Colors.yellow, size: 14)
+        else if (matchEvent.type == 11)
+          const Icon(FontAwesomeIcons.arrowRightArrowLeft as IconData?, size: 14)
+        else if (matchEvent.type == 1)
+          const Icon(FontAwesomeIcons.futbol as IconData?, size: 14)
         else
-          const Icon(FontAwesomeIcons.circleDot),
-
+          const Icon(FontAwesomeIcons.circleDot as IconData?, size: 14),
+*/
         const SizedBox(width: 6),
       ],
     );
@@ -167,21 +162,16 @@ class SummaryEvent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min, // Prevents unnecessary stretching
       children: [
         /// **Event Icon**
-        if (matchEvent.eventType == "Card")
-          Icon(
-            FontAwesomeIcons.solidSquare,
-            color:
-                matchEvent.eventDetail == "Yellow Card"
-                    ? Colors.yellow
-                    : Colors.red,
-            size: 14,
-          )
-        else if (matchEvent.eventType == "subst")
-          const Icon(FontAwesomeIcons.arrowRightArrowLeft, size: 14)
-        else if (matchEvent.eventType == "Goal")
-          const Icon(FontAwesomeIcons.futbol, size: 14)
+        if (matchEvent.type == 2)
+          Icon(FontAwesomeIcons.solidSquare as IconData?, color: Colors.red, size: 14)
+        else if(matchEvent.type == 3)
+          Icon(FontAwesomeIcons.solidSquare as IconData?, color: Colors.yellow, size: 14),
+        /*else if (matchEvent.type == 11)
+          const Icon(FontAwesomeIcons.arrowRightArrowLeft as IconData?, size: 14)
+        else if (matchEvent.type == 1)
+          const Icon(FontAwesomeIcons.futbol as IconData?, size: 14)
         else
-          const Icon(FontAwesomeIcons.circleDot, size: 14),
+          const Icon(FontAwesomeIcons.circleDot as IconData?, size: 14),*/
 
         const SizedBox(width: 6),
 
@@ -192,15 +182,15 @@ class SummaryEvent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                matchEvent.playerName,
+                matchEvent.playerName ?? '',
                 style: const TextStyle(fontSize: 14),
                 maxLines: 1, // Limits text to one line
                 overflow:
                     TextOverflow.ellipsis, // Adds "..." if text is too long
               ),
-              if (matchEvent.assistPlayer.isNotEmpty)
+              if (matchEvent.assistPlayerId != null)
                 Text(
-                  matchEvent.assistPlayer,
+                  '', //matchEvent.assistPlayer,
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

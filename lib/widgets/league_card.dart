@@ -31,7 +31,7 @@ class LeagueCard extends StatelessWidget {
           height: 24,
           padding: EdgeInsets.symmetric(vertical: 4.14),
           child: SvgPicture.network(
-            league.countryFlag,
+            league.countryLogo ?? '',
             height: double.infinity,
             width: double.infinity,
             fit: BoxFit.fill,
@@ -47,14 +47,14 @@ class LeagueCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              league.country,
+              league.country ?? '',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.0),
             ),
             const SizedBox(width: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: CustomImage(
-                imageString: league.image,
+                imageString: league.logo ?? '',
                 width: 16,
                 height: 16,
                 isCover: true,
@@ -63,7 +63,7 @@ class LeagueCard extends StatelessWidget {
             const SizedBox(width: 4),
             Flexible(
               child: Text(
-                league.name,
+                league.name ?? '',
                 overflow: TextOverflow.ellipsis, // Prevents overflow
                 style: TextStyle(fontWeight: FontWeight.w400, fontSize: 12.0),
               ),

@@ -20,8 +20,14 @@ class FixtureItem extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    // Parse the start_time string into a DateTime object
-    DateTime dateTime = DateTime.parse(match.date).toLocal();
+    // Convert the matchTime (Unix seconds) into a DateTime
+    DateTime dateTime =
+        match.matchTime != null
+            ? DateTime.fromMillisecondsSinceEpoch(
+              match.matchTime! * 1000,
+              isUtc: true,
+            ).toLocal()
+            : DateTime.now();
 
     // Format the DateTime object to extract only the time in "HH:mm" format
     String formattedTime = DateFormat('HH:mm').format(dateTime);
@@ -79,14 +85,14 @@ class FixtureItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.home.image,
+                          imageString: match.homeId ?? '',
                           height: 16,
                           width: 16,
                         ),
                         SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            match.home.name,
+                            match.homeName ?? '',
                             overflow:
                                 TextOverflow.ellipsis, // Prevents overflow
                             style: const TextStyle(
@@ -100,14 +106,14 @@ class FixtureItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.away.image,
+                          imageString: match.awayId ?? '',
                           height: 16,
                           width: 16,
                         ),
                         SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            match.away.name,
+                            match.awayName ?? '',
                             overflow:
                                 TextOverflow.ellipsis, // Prevents overflow
                             style: const TextStyle(

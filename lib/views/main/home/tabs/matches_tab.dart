@@ -26,9 +26,9 @@ class _MatchesTabState extends State<MatchesTab> {
   }
 
   Future<void> fetchHeadToHeadMatches() async {
-    try {
+    /*try {
       List<Match> fetchedMatches = await ApiService().getHeadToHeadMatches(
-        '${widget.match.home.id}-${widget.match.away.id}',
+        '${widget.match.homeId}-${widget.match.awayId}',
       );
 
       setState(() {
@@ -40,7 +40,7 @@ class _MatchesTabState extends State<MatchesTab> {
         errorMessage = "Error fetching matches: $e";
         isLoading = false;
       });
-    }
+    }*/
   }
 
   @override

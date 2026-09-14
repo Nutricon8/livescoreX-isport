@@ -35,7 +35,7 @@ class LeagueAppbar extends StatelessWidget implements PreferredSizeWidget {
                         borderRadius: BorderRadius.all(Radius.circular(12.0)),
                       ),
                       child: Image.network(
-                        league.image,
+                        league.logo ?? '',
 
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
@@ -56,7 +56,7 @@ class LeagueAppbar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      league.name,
+                      league.name ?? '',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,

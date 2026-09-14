@@ -64,9 +64,10 @@ class LiveMatchDetails extends StatelessWidget {
                     StatisticsTab(match: match),
                     LineupTab(match: match),
                     StandingsTab(
-                      leagueId: match.league.id,
-                      homeTeamId: match.home.id,
-                      awayTeamId: match.away.id,
+                      homeTeamId: match.homeId ?? '',
+                      awayTeamId: match.awayId ?? '',
+                      leagueId: match.leagueId,
+                      subLeagueId: match.subLeagueId ?? '',
                     ),
                   ],
                 ),

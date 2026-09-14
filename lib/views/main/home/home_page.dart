@@ -5,12 +5,9 @@ import 'package:livescorex/utils/ads/interstitial.dart';
 import 'package:livescorex/utils/ads/rewarded.dart';
 import 'package:livescorex/utils/api_service.dart';
 import 'package:livescorex/utils/favorite_matches.dart';
-import 'package:livescorex/utils/json_leagues.dart';
-import 'package:livescorex/utils/models/league.dart';
 import 'package:livescorex/utils/models/match.dart';
 import 'package:livescorex/widgets/custom_drawer.dart';
 import 'package:livescorex/widgets/fixture_item.dart';
-import 'package:livescorex/widgets/league_card.dart';
 import 'package:livescorex/widgets/live_item.dart';
 import '../../../widgets/DateScrollWidget.dart';
 
@@ -28,12 +25,13 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
   final InterstitialAdHelper adHelper = InterstitialAdHelper();
   final RewardedAdHelper rewardedAdHelper = RewardedAdHelper();
-  late Map<int, List<Match>> groupedMatches = {};
 
-  int? selectedLeague;
-  List<League> leagues = [];
-  List<int> priorityLeagueIds = [];
-  List<int> favoriteMatchIds = [];
+  /// leagueId -> matches, in the order chosen by [groupMatchesByLeague].
+  Map<String, List<Match>> groupedMatches = {};
+
+  String? selectedLeague;
+  List<String> priorityLeagueIds = [];
+  List<String> favoriteMatchIds = [];
 
   bool isLoading = true;
   String selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -41,155 +39,173 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
+
     loadLeagueIds().then((ids) {
-      setState(() {
-        priorityLeagueIds = ids;
-      });
+      if (!mounted) return;
+      setState(() => priorityLeagueIds = ids);
+      // If matches already arrived before priorities, re-sort.
+      if (groupedMatches.isNotEmpty) {
+        final flat = groupedMatches.values.expand((e) => e).toList();
+        groupMatchesByLeague(flat);
+      }
     });
+
     Future.microtask(() async {
       await fetchMatches();
       adHelper.loadAd();
       rewardedAdHelper.loadAd();
     });
+
     loadFavoriteMatches();
   }
 
+  // --- Priority leagues ----------------------------------------------------
+
+  Future<List<String>> loadLeagueIds() async {
+    // TODO: plug in your real source. Must return league IDs as strings.
+    // Example:
+    // final prefs = await SharedPreferences.getInstance();
+    // return prefs.getStringList('priorityLeagueIds') ?? <String>[];
+    return <String>[];
+  }
+
+  // --- Favorites -----------------------------------------------------------
+
   Future<void> loadFavoriteMatches() async {
-    List<Match> matches = await getMatches();
+    final matches = await getMatches();
+    if (!mounted) return;
     setState(() {
-      favoriteMatchIds = matches.map((match) => match.id).toList();
+      favoriteMatchIds = matches.map((m) => m.matchId).toList();
     });
   }
 
   Future<void> toggleFavorite(Match match) async {
-    List<Match> matches = await getMatches();
-    bool isFavorite = favoriteMatchIds.contains(match.id);
+    final matches = await getMatches();
+    final isFavorite = favoriteMatchIds.contains(match.matchId);
 
     if (isFavorite) {
-      matches.removeWhere((m) => m.id == match.id);
+      matches.removeWhere((m) => m.matchId == match.matchId);
     } else {
       matches.add(match);
     }
 
     await saveMatches(matches);
+    if (!mounted) return;
     setState(() {
-      favoriteMatchIds = matches.map((m) => m.id).toList();
+      favoriteMatchIds = matches.map((m) => m.matchId).toList();
     });
   }
 
-  void updateLeagues() {
-    setState(() {
-      leagues =
-          groupedMatches.keys
-              .map((leagueId) => groupedMatches[leagueId]!.first.league)
-              .toList();
-    });
+  // --- Filtering -----------------------------------------------------------
+
+  void filterMatchesByLeague(String? leagueId) {
+    setState(() => selectedLeague = leagueId);
   }
 
-  void filterMatchesByLeague(int? leagueId) {
-    setState(() {
-      selectedLeague = leagueId;
-    });
-  }
+  // --- Fetch ---------------------------------------------------------------
 
   Future<void> fetchMatches() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
+
     try {
-      List<Match> matches =
-          (await ApiService().getDateFixtures(selectedDate)).cast<Match>();
+      final matches = await ApiService().getDateFixtures(selectedDate);
+      debugPrint('FETCH: got ${matches.length} matches for $selectedDate');
       groupMatchesByLeague(matches);
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+    } catch (e, st) {
+      debugPrint('fetchMatches error: $e\n$st');
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
+  // --- Grouping + sorting (Match-only, no League reconstruction) ----------
+
+  /// Groups matches by leagueId and sorts the league groups:
+  ///   1. Priority leagues first, in the order they appear in
+  ///      [priorityLeagueIds].
+  ///   2. Remaining leagues alphabetically by `location` (country),
+  ///      then by `leagueName` as a tie-breaker.
   void groupMatchesByLeague(List<Match> matches) {
-    Map<int, List<Match>> tempGroupedMatches = {};
+    debugPrint('GROUP input: ${matches.length}');
 
-    for (var match in matches) {
-      int leagueId = match.league.id;
-
-      if (!tempGroupedMatches.containsKey(leagueId)) {
-        tempGroupedMatches[leagueId] = [];
-      }
-      tempGroupedMatches[leagueId]!.add(match);
+    // 1. Group by leagueId
+    final Map<String, List<Match>> tempGroupedMatches = {};
+    for (final match in matches) {
+      tempGroupedMatches.putIfAbsent(match.leagueId, () => []).add(match);
     }
 
-    // Extract leagues and sort them first by country name, then by priority
-    List<League> sortedLeagues =
-        tempGroupedMatches.keys
-            .map(
-              (id) => tempGroupedMatches[id]![0].league,
-            ) // Get league from matches
-            .toList()
-          /*..sort((a, b) {
-            bool aIsPriority = priorityLeagueIds.contains(a.id);
-            bool bIsPriority = priorityLeagueIds.contains(b.id);
+    // 2. Sort the league IDs using a representative Match from each group
+    final List<String> sortedLeagueIds = tempGroupedMatches.keys.toList();
+    sortedLeagueIds.sort((aId, bId) {
+      final aMatch = tempGroupedMatches[aId]!.first;
+      final bMatch = tempGroupedMatches[bId]!.first;
 
-            if (aIsPriority && !bIsPriority) return -1; // a comes first
-            if (!aIsPriority && bIsPriority) return 1; // b comes first
+      final aIndex = priorityLeagueIds.indexOf(aId);
+      final bIndex = priorityLeagueIds.indexOf(bId);
+      final aIsPriority = aIndex != -1;
+      final bIsPriority = bIndex != -1;
 
-            // If both are priority or neither is, sort by country name alphabetically
-            return a.country.compareTo(b.country);
-          });*/
-          ..sort((a, b) {
-            bool aIsPriority = priorityLeagueIds.contains(a.id);
-            bool bIsPriority = priorityLeagueIds.contains(b.id);
+      if (aIsPriority && bIsPriority) return aIndex.compareTo(bIndex);
+      if (aIsPriority) return -1;
+      if (bIsPriority) return 1;
 
-            if (aIsPriority && bIsPriority) {
-              // Sort by the order in priorityLeagueIds
-              return priorityLeagueIds.indexOf(a.id) -
-                  priorityLeagueIds.indexOf(b.id);
-            }
-            if (aIsPriority) return -1; // a comes first
-            if (bIsPriority) return 1; // b comes first
+      // Alphabetical by country (Match.location), then league name.
+      final countryCompare =
+      (aMatch.location ?? '').compareTo(bMatch.location ?? '');
+      if (countryCompare != 0) return countryCompare;
 
-            // If both are not in priorityLeagueIds, sort by country name alphabetically
-            return a.country.compareTo(b.country);
-          });
+      return (aMatch.leagueName ?? '').compareTo(bMatch.leagueName ?? '');
+    });
 
-    // Reconstruct the sorted map
-    Map<int, List<Match>> sortedGroupedMatches = {
-      for (var league in sortedLeagues)
-        league.id: tempGroupedMatches[league.id]!,
+    // 3. Rebuild the map in sorted order
+    final Map<String, List<Match>> sortedGroupedMatches = {
+      for (final id in sortedLeagueIds) id: tempGroupedMatches[id]!,
     };
 
+    debugPrint('GROUP output: ${sortedGroupedMatches.length} leagues');
+
+    // 4. Commit to state
+    if (!mounted) return;
     setState(() {
       groupedMatches = sortedGroupedMatches;
       isLoading = false;
-      updateLeagues();
+
+      // Drop a stale filter if the league disappeared from this date.
+      if (selectedLeague != null &&
+          !groupedMatches.containsKey(selectedLeague)) {
+        selectedLeague = null;
+      }
     });
   }
 
+  // --- Build ---------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    super.build(context); // AutomaticKeepAliveClientMixin
 
-    var filteredMatches =
-        selectedLeague == null
-            ? groupedMatches.entries
-            : groupedMatches.entries.where(
-              (entry) => entry.key == selectedLeague,
-            );
+    final entries = selectedLeague == null
+        ? groupedMatches.entries
+        : groupedMatches.entries.where((e) => e.key == selectedLeague);
+
+    debugPrint(
+      'BUILD: loading=$isLoading grouped=${groupedMatches.length} '
+          'selected=$selectedLeague entries=${entries.length}',
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            PopupMenuButton<int>(
-              icon: Icon(Icons.filter_list_outlined),
-              onSelected: (int newLeagueId) {
-                filterMatchesByLeague(newLeagueId);
-              },
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.filter_list_outlined),
+              onSelected: filterMatchesByLeague,
               itemBuilder: (BuildContext context) {
-                return groupedMatches.keys.map((int leagueId) {
-                  return PopupMenuItem<int>(
-                    value: leagueId,
+                return groupedMatches.entries.map((entry) {
+                  final first = entry.value.first;
+                  return PopupMenuItem<String>(
+                    value: entry.key,
                     child: Text(
-                      "${groupedMatches[leagueId]![0].league.country} - ${groupedMatches[leagueId]![0].league.name}",
+                      '${first.location ?? ''} - ${first.leagueName ?? ''}',
                     ),
                   );
                 }).toList();
@@ -197,22 +213,16 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
             ),
           ],
         ),
-
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, "/settings");
-            },
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
             icon: const Icon(Icons.settings),
           ),
           IconButton(
-            onPressed: () {
-              widget.onItemTapped(3);
-            },
+            onPressed: () => widget.onItemTapped(3),
             icon: const Icon(Icons.person_pin),
           ),
         ],
-
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: DateScrollWidget(
@@ -227,93 +237,90 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
         ),
       ),
       drawer: CustomDrawer(onItemTapped: widget.onItemTapped),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                onRefresh: fetchMatches,
-                child: CustomScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  slivers:
-                      filteredMatches.isEmpty
-                          ? [
-                            SliverFillRemaining(
-                              child: Center(
-                                child: Text("No matches available"),
-                              ),
-                            ),
-                          ]
-                          : [
-                            SliverList(
-                              delegate: SliverChildBuilderDelegate((
-                                context,
-                                index,
-                              ) {
-                                var entry = filteredMatches.elementAt(index);
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+        onRefresh: fetchMatches,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: entries.isEmpty
+              ? [
+            const SliverFillRemaining(
+              child: Center(child: Text('No matches available')),
+            ),
+          ]
+              : [
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                  // Insert a banner ad every 6 league groups.
+                  if (index > 0 && index % 6 == 0) {
+                    return BannerAdWidget();
+                  }
 
-                                final adIndex = index ~/ 6;
-                                if (index > 0 && index % 6 == 0) {
-                                  return BannerAdWidget();
-                                }
-                                final matchIndex = index - adIndex;
-                                if (matchIndex >= groupedMatches.length) {
-                                  return SizedBox.shrink();
-                                }
+                  // Skip ad slots when mapping back to entry index.
+                  final adCount = index ~/ 6;
+                  final realIndex = index - adCount;
+                  if (realIndex >= entries.length) {
+                    return const SizedBox.shrink();
+                  }
 
-                                return _buildMatchesTab(
-                                  context,
-                                  entry.value,
-                                  favoriteMatchIds,
-                                  toggleFavorite,
-                                  adHelper,
-                                  rewardedAdHelper,
-                                );
-                              }, childCount: filteredMatches.length),
-                            ),
-                          ],
-                ),
+                  final entry = entries.elementAt(realIndex);
+
+                  return _buildMatchesTab(
+                    context,
+                    entry.value,
+                    favoriteMatchIds,
+                    toggleFavorite,
+                    adHelper,
+                    rewardedAdHelper,
+                  );
+                },
+                childCount:
+                entries.length + (entries.length ~/ 6),
               ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 Widget _buildMatchesTab(
-  BuildContext context,
-  List<Match> matches,
-  List<int> favoriteMatchIds,
-  Function(Match) toggleFavorite,
-  InterstitialAdHelper adHelper,
-  RewardedAdHelper rewardedAdHelper,
-) {
-  if (matches.isEmpty) return SizedBox();
-  Match firstMatch = matches.first;
-  League league = firstMatch.league;
+    BuildContext context,
+    List<Match> matches,
+    List<String> favoriteMatchIds,
+    Function(Match) toggleFavorite,
+    InterstitialAdHelper adHelper,
+    RewardedAdHelper rewardedAdHelper,
+    ) {
+  if (matches.isEmpty) return const SizedBox.shrink();
 
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LeagueCard(league: league),
-
         ListView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: matches.length,
           itemBuilder: (context, index) {
-            Match match = matches[index];
+            final match = matches[index];
 
-            if (["LIVE", "HT", "2H"].contains(match.short)) {
+            // Live status codes 1..5 → LiveItem, otherwise FixtureItem.
+            if ([1, 2, 3, 4, 5].contains(match.status)) {
               return LiveItem(
                 match: match,
-                isFavorite: favoriteMatchIds.contains(matches[index].id),
+                isFavorite: favoriteMatchIds.contains(match.matchId),
                 onFavoriteToggle: toggleFavorite,
                 rewardedAdHelper: rewardedAdHelper,
               );
             } else {
               return FixtureItem(
                 match: match,
-                isFavorite: favoriteMatchIds.contains(matches[index].id),
+                isFavorite: favoriteMatchIds.contains(match.matchId),
                 onFavoriteToggle: toggleFavorite,
                 adHelper: adHelper,
               );

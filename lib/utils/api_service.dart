@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:livescorex/utils/models/league.dart';
 import 'package:livescorex/utils/models/match.dart';
 import 'package:livescorex/utils/models/match_event.dart';
@@ -10,618 +10,321 @@ import 'package:livescorex/utils/models/standing.dart';
 import 'package:livescorex/utils/models/team.dart';
 
 class ApiService {
-  static const String _baseUrl = "https://v3.football.api-sports.io";
-  static const String _apiKey = "9fcbc3799412e82de6dfe23d2b967f8b";
+  static const String _baseUrl = "https://api.isportsapi.com";
+  static const String _apiKey = "ycOrrj2NLYdzuOBr";
+
   final int currentSeason = DateTime.now().year - 1;
 
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: _baseUrl,
-      headers: {
-        'X-RapidAPI-Key': _apiKey,
-        'X-RapidAPI-Host': 'v3.football.api-sports.io',
-      },
+        baseUrl: _baseUrl,
+        queryParameters: {'api_key': _apiKey},
+       // responseType: ResponseType.plain, // 👈 ADD THIS
     ),
   );
 
+  // Generic response handler
+  dynamic _handleResponse(Response response) {
+    print('RAW API RESPONSE: ${response.data}'); // 👈 Add this line
+    final raw = response.data;
+
+    if (raw == null) {
+      throw Exception('Empty response from API');
+    }
+
+    // Dio sometimes hands us a String (raw JSON) instead of a decoded Map.
+    final Map<String, dynamic> body;
+    if (raw is String) {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        throw Exception('Unexpected response body: ${decoded.runtimeType}');
+      }
+      body = Map<String, dynamic>.from(decoded);
+    } else if (raw is Map) {
+      body = Map<String, dynamic>.from(raw);
+    } else {
+      throw Exception('Unexpected response type: ${raw.runtimeType}');
+    }
+
+    // Tolerate code as int OR String (iSportsAPI returns both).
+    final code = _asInt(body['code']);
+    if (code != 0) {
+      throw Exception(
+        body['message']?.toString() ?? 'Unknown API Error (code: $code)',
+      );
+    }
+
+    return body['data'];
+  }
+
+  static int? _asInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
+  }
+
+  // Fetch Leagues - CORRECTED PATH
   Future<List<League>> getLeagues() async {
     try {
-      // Load JSON file
-      String jsonString = await rootBundle.loadString('assets/leagues.json');
-
-      // Decode JSON
-      final Map<String, dynamic> jsonData = json.decode(jsonString);
-      List<dynamic> leaguesData = jsonData['leagues'];
-
-      // Map JSON data to League objects
-      return leaguesData.map((league) {
-        return League(
-          id: league['id'],
-          name: league['name'],
-          image: league['logo'] ?? '',
-          country:
-              league['country'] ?? 'Unknown', // Adjust based on data structure
-          countryFlag: league['countryFlag'] ?? '',
-        );
-      }).toList();
+      final response = await _dio.get('/sport/football/league/basic');
+      final data = _handleResponse(response);
+      return (data as List).map((json) => League.fromJson(json)).toList();
     } catch (e) {
-      throw Exception("Error loading leagues from JSON: $e");
+      throw Exception("Error fetching leagues: $e");
     }
   }
 
-  // Fetch Premier League Teams
-  Future<List<Team>> getPremierLeagueTeams() async {
+  // Fetch Matches - CORRECTED PATH
+  Future<List<Match>> getLiveMatches(bool live) async {
     try {
-      final response = await _dio.get(
-        '/teams',
-        queryParameters: {'league': 39, 'season': currentSeason},
-      );
-      List<dynamic> teamsData = response.data['response'];
-
-      return teamsData.map((team) {
-        return Team(
-          id: team['team']['id'],
-          name: team['team']['name'],
-          image: team['team']['logo'] ?? '',
-        );
-      }).toList();
-    } catch (e) {
-      throw Exception("Error fetching Premier League teams: $e");
-    }
-  }
-
-  // Fetch Standings for a given league
-  Future<List<Standing>> getStandings(int leagueId) async {
-    try {
-      final response = await _dio.get(
-        '/standings',
-        queryParameters: {
-          'league': leagueId.toString(),
-          'season': currentSeason,
-        },
-      );
-      List<dynamic> standingsData =
-          response.data['response'][0]['league']['standings'][0];
-
-      return standingsData.map((standing) {
-        return Standing(
-          id: standing['team']['id'],
-          position: standing['rank'],
-          team: standing['team']['name'],
-          crest: standing['team']['logo'],
-          played: standing['all']['played'],
-          won: standing['all']['win'],
-          drawn: standing['all']['draw'],
-          lost: standing['all']['lose'],
-          goalDifference: standing['goalsDiff'],
-          points: standing['points'],
-        );
-      }).toList();
-    } catch (e) {
-      throw Exception("Error fetching standings: $e");
-    }
-  }
-
-  Future<List<Match>> getDateFixtures(String date) async {
-    try {
-      // Fetch Fixtures
-      final fixturesResponse = await _dio.get(
-        '/fixtures',
-        queryParameters: {
-          'date': date,
-          'timezone': 'Africa/Addis_Ababa', // Fixed space issue
-        },
-      );
-      List<dynamic> matchesData = fixturesResponse.data['response'];
-
-      // Initialize Match list
-      List<Match> matches =
-          matchesData.map((match) {
-            League league = League(
-              id: match['league']['id'],
-              name: match['league']['name'],
-              image: match['league']['logo'],
-              country: match['league']['country'],
-              countryFlag: match['league']['flag'] ?? '',
-            );
-
-            Team home = Team(
-              id: match['teams']['home']['id'],
-              name: match['teams']['home']['name'],
-              image: match['teams']['home']['logo'],
-            );
-            Team away = Team(
-              id: match['teams']['away']['id'],
-              name: match['teams']['away']['name'],
-              image: match['teams']['away']['logo'],
-            );
-
-            return Match(
-              league: league,
-              id: match['fixture']['id'],
-              home: home,
-              away: away,
-              date: match['fixture']['date'],
-              elapsed: match['fixture']['status']['elapsed'],
-              short: match['fixture']['status']['short'],
-              halftimeScore:
-                  (match['score']['halftime']['home'] == null &&
-                          match['score']['halftime']['away'] == null)
-                      ? null
-                      : '${match['score']['halftime']['home'] ?? ''}-${match['score']['halftime']['away'] ?? ''}',
-              extra: match['fixture']['status']['extra'],
-              homeScore: null, // Placeholder, we will update it with odds below
-              awayScore: null, // Placeholder, we will update it with odds below
-            );
-          }).toList();
-
-      // Fetch Odds
-      final oddsResponse = await _dio.get(
-        '/odds',
-        queryParameters: {'date': date, 'timezone': 'Africa/Addis_Ababa'},
-      );
-      List<dynamic> oddsData = oddsResponse.data['response'];
-
-      // Process odds and merge into matches
-      for (var odd in oddsData) {
-        var fixtureId = odd['fixture']['id'];
-        var bookmakers = odd['bookmakers'];
-
-        if (bookmakers.isEmpty) continue; // Skip if no bookmakers
-
-        Map<String, dynamic>? matchWinnerBet;
-
-        // Iterate over all bookmakers until we find a valid "Home/Away" bet
-        for (var bookmaker in bookmakers) {
-          var bets = bookmaker['bets'];
-
-          matchWinnerBet = bets.firstWhere(
-            (bet) => bet['name'] == 'Home/Away' || bet['id'] == 2,
-            orElse: () => null,
-          );
-
-          if (matchWinnerBet != null) break; // Stop searching if found
-        }
-
-        if (matchWinnerBet == null) continue; // Skip if no Match Winner odds
-
-        var values = matchWinnerBet['values'];
-        String homeOdd =
-            values.firstWhere(
-              (v) => v['value'] == 'Home',
-              orElse: () => {'odd': '-'},
-            )['odd'];
-        String awayOdd =
-            values.firstWhere(
-              (v) => v['value'] == 'Away',
-              orElse: () => {'odd': '-'},
-            )['odd'];
-
-        // Find the corresponding match and update its scores (homeScore and awayScore)
-        for (var match in matches) {
-          if (match.id == fixtureId) {
-            match.homeScore = double.tryParse(
-              homeOdd,
-            ); // Assign the homeOdd as homeScore
-            match.awayScore = double.tryParse(
-              awayOdd,
-            ); // Assign the awayOdd as awayScore
-            break;
-          }
-        }
-      }
-
-      return matches;
-    } catch (e) {
-      throw Exception("Error fetching matches with odds: $e");
-    }
-  }
-
-  Future<List<Match>> getLiveMatches() async {
-    try {
-      final response = await _dio.get(
-        '/fixtures',
-        queryParameters: {'live': 'all', 'timezone': 'Africa/Addis_Ababa'},
-      );
-      List<dynamic> matchesData = response.data['response'];
-
-      return matchesData.map((match) {
-        League league = League(
-          id: match['league']['id'],
-          name: match['league']['name'],
-          image: match['league']['logo'],
-          country: match['league']['country'],
-          countryFlag: match['league']['flag'] ?? '',
-        );
-
-        Team home = Team(
-          id: match['teams']['home']['id'],
-          name: match['teams']['home']['name'],
-          image: match['teams']['home']['logo'],
-        );
-        Team away = Team(
-          id: match['teams']['away']['id'],
-          name: match['teams']['away']['name'],
-          image: match['teams']['away']['logo'],
-        );
-
-        return Match(
-          league: league,
-          id: match['fixture']['id'],
-          home: home,
-          away: away,
-
-          //homeScore: match['goals']['home'], // Can be null
-          //awayScore: match['goals']['away'], // Can be null
-          homeScore:
-              (match['goals']['home'] != null)
-                  ? match['goals']['home'].toDouble()
-                  : null, // Default to null if no score
-          awayScore:
-              (match['goals']['away'] != null)
-                  ? match['goals']['away'].toDouble()
-                  : null, // Default to null if no score
-          date: match['fixture']['date'],
-          elapsed: match['fixture']['status']['elapsed'], // Can be null
-          short: match['fixture']['status']['short'],
-          halftimeScore:
-              match['score']['halftime']['home'] != null &&
-                      match['score']['halftime']['away'] != null
-                  ? '${match['score']['halftime']['home']}-${match['score']['halftime']['away']}'
-                  : null, // Can be null if no halftime score
-          extra: match['fixture']['status']['extra'], // Can be null
-        );
-      }).toList();
+      final response = await _dio.get('/sport/football/livescores');
+      final data = _handleResponse(response);
+      return (data as List).map((json) => Match.fromJson(json)).toList();
     } catch (e) {
       throw Exception("Error fetching live matches: $e");
     }
   }
 
-  Future<List<Match>> getHeadToHeadMatches(String headToHead) async {
+  Future<List<Match>> getDateFixtures(String date) async {
     try {
       final response = await _dio.get(
-        '/fixtures/headtohead',
-        queryParameters: {'h2h': headToHead, 'last': '6'},
+        '/sport/football/schedule',
+        queryParameters: {'date': date},
       );
-
-      List<dynamic> matchesData = response.data['response'];
-
-      return matchesData.map((match) {
-        League league = League(
-          id: match['league']['id'],
-          name: match['league']['name'],
-          image: match['league']['logo'],
-          country: match['league']['country'],
-          countryFlag: match['league']['flag'] ?? '',
-        );
-
-        Team home = Team(
-          id: match['teams']['home']['id'],
-          name: match['teams']['home']['name'],
-          image: match['teams']['home']['logo'],
-        );
-        Team away = Team(
-          id: match['teams']['away']['id'],
-          name: match['teams']['away']['name'],
-          image: match['teams']['away']['logo'],
-        );
-
-        return Match(
-          league: league,
-          id: match['fixture']['id'],
-          home: home,
-          away: away,
-
-          //homeScore: match['goals']['home'], // Can be null
-          //awayScore: match['goals']['away'], // Can be null
-          homeScore:
-              (match['goals']['home'] != null)
-                  ? match['goals']['home'].toDouble()
-                  : null, // Default to null if no score
-          awayScore:
-              (match['goals']['away'] != null)
-                  ? match['goals']['away'].toDouble()
-                  : null, // Default to null if no score
-          date: match['fixture']['date'],
-          elapsed: match['fixture']['status']['elapsed'], // Can be null
-          short: match['fixture']['status']['short'],
-          halftimeScore:
-              match['score']['halftime']['home'] != null &&
-                      match['score']['halftime']['away'] != null
-                  ? '${match['score']['halftime']['home']}-${match['score']['halftime']['away']}'
-                  : null, // Can be null if no halftime score
-          extra: match['fixture']['status']['extra'], // Can be null
-        );
-      }).toList();
+      final data = _handleResponse(response);
+      return (data as List).map((json) => Match.fromJson(json)).toList();
     } catch (e) {
-      throw Exception("Error fetching head-to-head matches: $e");
+      throw Exception("Error fetching live matches: $e");
     }
   }
 
-  /*Future<List<Player>> getLineups(int fixtureId) async {
+  Future<List<Team>> getAllTeams() async {
+    try {
+      final response = await _dio.get('/sport/football/team');
+      final data = _handleResponse(response);
+
+      // data is already the list of teams
+      if (data is! List) {
+        throw Exception("Unexpected data format: expected a List, got ${data.runtimeType}");
+      }
+
+      return data.map((json) => Team.fromJson(json as Map<String, dynamic>)).toList();
+    } catch (e) {
+      throw Exception("Error fetching teams: $e");
+    }
+  }
+
+  Future<List<Standing>> getStandings(String leagueId) async {
     try {
       final response = await _dio.get(
-        '/fixtures/lineups',
-        queryParameters: {'fixture': fixtureId},
+        '/sport/football/standing/league',
+        queryParameters: {'leagueId': leagueId},
       );
+      final data = _handleResponse(response);
 
-      List<dynamic> lineupsData = response.data['response'];
-      List<Player> players = [];
+      if (data is! Map) {
+        throw Exception('Expected Map, got ${data.runtimeType}');
+      }
 
-      // Predefined positions for two teams
-      final List<Offset> firstTeamPositions = [
-        // Red Team (Top Half)
-        Offset(0.5, 0.07),
+      // Build teamId -> teamInfo lookup from data['teamInfos'].
+      final teamInfos = (data['teamInfos'] as List?) ?? const [];
+      final Map<String, Map<String, dynamic>> teamsById = {
+        for (final t in teamInfos.whereType<Map>())
+          t['teamId'].toString(): Map<String, dynamic>.from(t),
+      };
 
-        Offset(0.1, 0.2),
-        Offset(0.4, 0.2),
-        Offset(0.6, 0.2),
-        Offset(0.9, 0.2),
+      // Parse data['totalStandings'] using the lookup.
+      final standingsRaw = (data['totalStandings'] as List?) ?? const [];
+      return standingsRaw
+          .whereType<Map>()
+          .map((e) => Standing.fromJson(Map<String, dynamic>.from(e), teamsById))
+          .toList();
+    } catch (e, st) {
+      debugPrint('getStandings error: $e\n$st');
+      throw Exception('Error fetching standings: $e');
+    }
+  }
+  Future<List<Player>> getLineups(String matchId) async {
+    try {
+      final response = await _dio.get(
+        '/sport/football/lineups',
+        queryParameters: {'matchId': matchId},
+      );
+      final data = _handleResponse(response);
 
-        Offset(0.2, 0.35),
-        Offset(0.4, 0.35),
-        Offset(0.6, 0.35),
-        Offset(0.8, 0.35),
+      final List<Player> players = [];
 
-        Offset(0.4, 0.45),
-        Offset(0.6, 0.45),
-      ];
+      if (data is List) {
+        for (final matchData in data.whereType<Map>()) {
+          final homeFormation = matchData['homeFormation']?.toString();
+          final awayFormation = matchData['awayFormation']?.toString();
 
-      final List<Offset> secondTeamPositions = [
-        Offset(0.5, 0.95),
-        Offset(0.1, 0.8),
-        Offset(0.4, 0.8),
-        Offset(0.6, 0.8),
-        Offset(0.9, 0.8),
-        Offset(0.2, 0.65),
-        Offset(0.4, 0.65),
-        Offset(0.6, 0.65),
-        Offset(0.8, 0.65),
-        Offset(0.35, 0.55),
-
-        Offset(0.6, 0.55),
-      ];
-
-      int firstTeamIndex = 0, secondTeamIndex = 0;
-      Team? firstTeam, secondTeam;
-
-      for (var lineup in lineupsData) {
-        var teamData = lineup['team'];
-
-        // Create Team object
-        Team team = Team(
-          id: teamData['id'],
-          name: teamData['name'],
-          image: teamData['logo'],
-        );
-
-        // Identify the first and second team (without using team names)
-        if (firstTeam == null) {
-          firstTeam = team;
-        } else if (secondTeam == null && team.id != firstTeam.id) {
-          secondTeam = team;
-        }
-
-        for (var playerEntry in lineup['startXI']) {
-          var player = playerEntry['player'];
-
-          // Extract first letter of first name and full last name
-          String formattedName = player['name'];
-          List<String> nameParts = formattedName.split(" ");
-          if (nameParts.length > 1) {
-            formattedName = "${nameParts.first[0]}. ${nameParts.last}";
-          }
-
-          // Assign predefined position based on team
-          Offset gridOffset = Offset.zero;
-          if (team.id == firstTeam?.id &&
-              firstTeamIndex < firstTeamPositions.length) {
-            gridOffset = firstTeamPositions[firstTeamIndex++];
-          } else if (team.id == secondTeam?.id &&
-              secondTeamIndex < secondTeamPositions.length) {
-            gridOffset = secondTeamPositions[secondTeamIndex++];
-          }
-
-          players.add(
-            Player(
-              name: formattedName,
-              position: player['pos'],
-              shirtNumber: player['number'],
-              team: team, // Now correctly passing the Team object
-              grid: gridOffset,
-            ),
+          // We don't know the teamId from the lineup entry itself —
+          // iSportsAPI returns homeLineup / awayLineup as separate arrays,
+          // so we tag them when constructing the Player.
+          _appendLineupPlayers(
+            players,
+            matchData['homeLineup'],
+            teamId: 'home',          // placeholder; LineupTab re-groups by these tags
+            formation: homeFormation,
+            isSubstitute: false,
+          );
+          _appendLineupPlayers(
+            players,
+            matchData['awayLineup'],
+            teamId: 'away',
+            formation: awayFormation,
+            isSubstitute: false,
+          );
+          _appendLineupPlayers(
+            players,
+            matchData['homeBackup'],
+            teamId: 'home',
+            formation: homeFormation,
+            isSubstitute: true,
+          );
+          _appendLineupPlayers(
+            players,
+            matchData['awayBackup'],
+            teamId: 'away',
+            formation: awayFormation,
+            isSubstitute: true,
           );
         }
       }
 
       return players;
-    } catch (e) {
-      throw Exception("Error fetching lineups: $e");
-    }
-  }*/
-
-  Future<List<Player>> getLineups(int fixtureId) async {
-    try {
-      final response = await _dio.get(
-        '/fixtures/lineups',
-        queryParameters: {'fixture': fixtureId},
-      );
-
-      List<dynamic> lineupsData = response.data['response'];
-      List<Player> players = [];
-
-      // Predefined positions for two teams
-      final List<Offset> firstTeamPositions = [
-        // Red Team (Top Half)
-        Offset(0.5, 0.07),
-        Offset(0.1, 0.2),
-        Offset(0.4, 0.2),
-        Offset(0.6, 0.2),
-        Offset(0.9, 0.2),
-        Offset(0.2, 0.35),
-        Offset(0.4, 0.35),
-        Offset(0.6, 0.35),
-        Offset(0.8, 0.35),
-        Offset(0.4, 0.45),
-        Offset(0.6, 0.45),
-      ];
-
-      final List<Offset> secondTeamPositions = [
-        Offset(0.5, 0.95),
-        Offset(0.1, 0.8),
-        Offset(0.4, 0.8),
-        Offset(0.6, 0.8),
-        Offset(0.9, 0.8),
-        Offset(0.2, 0.65),
-        Offset(0.4, 0.65),
-        Offset(0.6, 0.65),
-        Offset(0.8, 0.65),
-        Offset(0.35, 0.55),
-        Offset(0.6, 0.55),
-      ];
-
-      int firstTeamIndex = 0, secondTeamIndex = 0;
-      Team? firstTeam, secondTeam;
-
-      for (var lineup in lineupsData) {
-        var teamData = lineup['team'];
-
-        // Create Team object
-        Team team = Team(
-          id: teamData['id'],
-          name: teamData['name'],
-          image: teamData['logo'],
-        );
-
-        // Identify the first and second team (without using team names)
-        if (firstTeam == null) {
-          firstTeam = team;
-        } else if (secondTeam == null && team.id != firstTeam.id) {
-          secondTeam = team;
-        }
-
-        for (var playerEntry in lineup['startXI']) {
-          var player = playerEntry['player'];
-
-          // Extract first letter of first name and full last name
-          String formattedName = player['name'];
-          List<String> nameParts = formattedName.split(" ");
-          if (nameParts.length > 1) {
-            formattedName = "${nameParts.first[0]}. ${nameParts.last}";
-          }
-
-          // Assign predefined position based on team
-          Offset gridOffset = Offset.zero;
-          if (team.id == firstTeam.id &&
-              firstTeamIndex < firstTeamPositions.length) {
-            gridOffset = firstTeamPositions[firstTeamIndex++];
-          } else if (team.id == secondTeam?.id &&
-              secondTeamIndex < secondTeamPositions.length) {
-            gridOffset = secondTeamPositions[secondTeamIndex++];
-          }
-
-          players.add(
-            Player(
-              name: formattedName,
-              position: player['pos'],
-              shirtNumber: player['number'],
-              team: team,
-              grid: gridOffset,
-            ),
-          );
-        }
-
-        // Add substitutes (without grid positions)
-        for (var subEntry in lineup['substitutes']) {
-          var player = subEntry['player'];
-
-          // Extract first letter of first name and full last name
-          String formattedName = player['name'];
-          List<String> nameParts = formattedName.split(" ");
-          if (nameParts.length > 1) {
-            formattedName = "${nameParts.first[0]}. ${nameParts.last}";
-          }
-
-          players.add(
-            Player(
-              name: formattedName,
-              position: player['pos'],
-              shirtNumber: player['number'],
-              team: team,
-              grid: Offset.zero, // No predefined position for substitutes
-            ),
-          );
-        }
-      }
-
-      return players;
-    } catch (e) {
-      throw Exception("Error fetching lineups: $e");
+    } catch (e, st) {
+      debugPrint('getLineups error: $e\n$st');
+      throw Exception('Error fetching lineups: $e');
     }
   }
 
-  Future<List<MatchStatistics>> getMatchStatistics(int fixtureId) async {
+  /// Converts raw lineup entries into [Player] objects using the constructor
+  /// directly (bypassing [Player.fromJson] because the lineup response only
+  /// contains a subset of the fields the model requires).
+  void _appendLineupPlayers(
+      List<Player> out,
+      dynamic lineupRaw, {
+        required String teamId,
+        String? formation,
+        required bool isSubstitute,
+      }) {
+    if (lineupRaw is! List) return;
+
+    for (final entry in lineupRaw.whereType<Map>()) {
+      final playerId = entry['playerId']?.toString() ?? '';
+      final name = entry['name']?.toString() ?? '';
+      final number = _asInt(entry['number']) ?? 0;
+      final position = _asInt(entry['position']) ?? 0;
+
+      out.add(
+        Player(
+          // --- fields provided by the lineup endpoint ---
+          recordId: playerId,       // no separate recordId — reuse playerId
+          playerId: playerId,
+          name: name,
+          number: number,
+          teamId: teamId,           // 'home' or 'away' — see LineupTab below
+          position: _positionLabel(position),
+
+          // --- required fields we don't have; use safe defaults ---
+          birthday: '',
+          height: 0,
+          country: '',
+          feet: '',
+          weight: 0,
+          photo: '',
+          value: 0,
+          introduce: '',
+          contractEndDate: '',
+
+          // Optional fields
+          pac: null,
+          sho: null,
+          pas: null,
+          dri: null,
+          def: null,
+          phy: null,
+          isFavorite: false,
+        ),
+      );
+    }
+  }
+
+  String _positionLabel(int p) {
+    switch (p) {
+      case 0:
+        return 'GK';
+      case 1:
+        return 'DEF';
+      case 2:
+        return 'MID';
+      case 3:
+        return 'FWD';
+      default:
+        return '';
+    }
+  }
+
+  // Fetch Match Statistics - CORRECTED path
+  Future<List<MatchStatistics>> getMatchStatistics(String matchId) async {
     try {
       final response = await _dio.get(
-        '/fixtures/statistics',
-        queryParameters: {'fixture': fixtureId},
+        '/sport/football/events/stats',
+        queryParameters: {'matchId': matchId},
       );
+      final data = _handleResponse(response);
 
-      if (response.data == null ||
-          response.data['response'] == null ||
-          response.data['response'].isEmpty) {
-        throw Exception("No statistics data found for fixture $fixtureId");
+      if (data is! List || data.length < 2) {
+        throw Exception("Incomplete statistics data");
       }
 
-      List<dynamic> statisticsData = response.data['response'];
+      List<MatchStatistics> stats = [];
+      final homeStats = data[0]['statistics'] as List? ?? [];
+      final awayStats = data[1]['statistics'] as List? ?? [];
 
-      if (statisticsData.length < 2) {
-        throw Exception("Incomplete statistics data for fixture $fixtureId");
-      }
-
-      Map<String, dynamic> homeTeamStats = statisticsData[0];
-      Map<String, dynamic> awayTeamStats = statisticsData[1];
-
-      List<MatchStatistics> matchStats = [];
-
-      for (int i = 0; i < homeTeamStats['statistics'].length; i++) {
-        matchStats.add(
+      for (int i = 0; i < homeStats.length; i++) {
+        stats.add(
           MatchStatistics(
-            type: homeTeamStats['statistics'][i]['type'],
-            home: homeTeamStats['statistics'][i]['value'],
-            away: awayTeamStats['statistics'][i]['value'],
+            type: homeStats[i]['type'] as int?,
+            home: homeStats[i]['value']?.toString(),
+            away:
+                awayStats.length > i ? awayStats[i]['value']?.toString() : null,
           ),
         );
       }
-
-      return matchStats;
+      return stats;
     } catch (e) {
       throw Exception("Error fetching match statistics: $e");
     }
   }
 
-  // Fetch Match Summary (Events)
-  Future<List<MatchEvent>> getMatchSummary(int fixtureId) async {
+  // Fetch Match Events - CORRECTED path and mapping
+  Future<List<MatchEvent>> getMatchEvents(String matchId) async {
     try {
       final response = await _dio.get(
-        '/fixtures/events',
-        queryParameters: {'fixture': fixtureId},
+        '/sport/football/events',
+        queryParameters: {'matchId': matchId},
       );
-      List<dynamic> eventsData = response.data['response'];
+      final data = _handleResponse(response);
 
-      return eventsData.map((event) {
+      return (data as List).map((event) {
         return MatchEvent(
-          time: event['time']['elapsed'].toString(),
-          teamId: event['team']['id'] ?? 0,
-          playerName: event['player'] != null ? event['player']['name'] : '',
-          eventType: event['type'] ?? 'Unknown',
-          eventDetail: event['detail'] ?? '',
-          assistPlayer:
-              event['assist'] != null ? event['assist']['name'] ?? '' : '',
+          eventId: event['eventId']?.toString() ?? '',
+          minute: event['time']?['elapsed']?.toString(),
+          type: event['type'] as int?,
+          playerId: event['player']?['id']?.toString(),
+          playerName: event['player']?['name'] as String?,
+          assistPlayerId: event['assist']?['id']?.toString(),
+          homeEvent: false, // Determine from teamId comparison if needed
+          isFavorite: false,
         );
       }).toList();
     } catch (e) {
-      throw Exception("Error fetching match summary: $e");
+      throw Exception("Error fetching match events: $e");
     }
   }
 }

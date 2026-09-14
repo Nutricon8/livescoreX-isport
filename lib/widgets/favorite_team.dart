@@ -18,10 +18,10 @@ class FavoriteTeam extends StatelessWidget {
         contentPadding: EdgeInsets.symmetric(horizontal: 8),
         title: Row(
           children: [
-            CustomImage(imageString: team.image, height: 16, width: 16),
+            CustomImage(imageString: team.logo ?? '', height: 16, width: 16),
             SizedBox(width: 4),
             Text(
-              team.name,
+              team.name ?? '',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ],

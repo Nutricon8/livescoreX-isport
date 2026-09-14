@@ -9,124 +9,145 @@ import 'package:livescorex/utils/favorite_teams.dart';
 import 'package:livescorex/utils/models/league.dart';
 import 'package:livescorex/utils/models/match.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'converters/match_converter.dart';
 import 'models/team.dart';
 
+/// iSports API status codes (adjust to your actual mapping).
+/// Common mapping: 0=NotStarted, 1=FirstHalf, 2=HalfTime,
+/// 3=SecondHalf, 4=Finished, etc. Verify against your API docs.
+const int statusFirstHalf = 1;
+const int statusHalfTime = 2;
+const int statusSecondHalf = 3;
+const int statusFullTime = 4;
+
 Future<void> checkMatchUpdates(List<Match> liveMatches) async {
-  List<Team> favoriteTeams = await getTeams(); // Get favorite teams
-  List<Match> favoriteMatches = await getMatches(); // Get favorite matches
+  List<Team> favoriteTeams = await getTeams();
+  List<Match> favoriteMatches = await getMatches();
   List<League> favoriteLeagues = await getLeagues();
 
-  if (favoriteTeams.isEmpty && favoriteMatches.isEmpty) return;
+  if (favoriteTeams.isEmpty &&
+      favoriteMatches.isEmpty &&
+      favoriteLeagues.isEmpty) {
+    return;
+  }
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? previousJson = prefs.getString('previous_matches');
   List<Match> previousMatches =
-      previousJson != null ? MatchConverter.decode(previousJson) : [];
+      previousJson != null
+          ? (jsonDecode(previousJson) as List)
+              .map((j) => Match.fromJson(j as Map<String, dynamic>))
+              .toList()
+          : [];
 
   for (var match in liveMatches) {
     bool isFavorite =
         favoriteTeams.any(
-          (team) => team.id == match.home.id || team.id == match.away.id,
+          (team) => team.teamId == match.homeId || team.teamId == match.awayId,
         ) ||
-        favoriteMatches.any((favMatch) => favMatch.id == match.id) ||
-        favoriteLeagues.any((favLeague) => favLeague.id == match.league.id);
+        favoriteMatches.any((fav) => fav.matchId == match.matchId) ||
+        favoriteLeagues.any((fav) => fav.leagueId == match.leagueId);
 
-    var previousMatch = previousMatches.firstWhere(
-      (m) => m.id == match.id,
-      orElse: () => match,
-    );
+    if (!isFavorite) continue;
 
-    if (isFavorite) {
-      if (match.homeScore != null &&
-              previousMatch.homeScore != null &&
-              match.homeScore! > previousMatch.homeScore! ||
-          match.awayScore != null &&
-              previousMatch.awayScore != null &&
-              match.awayScore! > previousMatch.awayScore!) {
-        _sendGoalNotification(
-          "Goooal ⚽! ${match.home.name} 🆚 ${match.away.name}",
-          "New score: ${match.home.name} ${match.homeScore?.toInt()} - ${match.awayScore?.toInt()} ${match.away.name}",
-          match,
-        );
-      }
+    Match? previousMatch;
+    try {
+      previousMatch = previousMatches.firstWhere(
+        (m) => m.matchId == match.matchId,
+      );
+    } catch (_) {
+      previousMatch = null;
+    }
 
-      if (match.short == "HT" && previousMatch.short != "HT") {
-        _sendGoalNotification(
-          "Half Time!",
-          "${match.home.name} ${match.homeScore}  🆚 ${match.awayScore} ${match.away.name}",
-          match,
-        );
-      }
+    final prevHome = previousMatch?.homeScore;
+    final prevAway = previousMatch?.awayScore;
 
-      if (match.short == "2H" &&
-          (previousMatch.short == "HT" || previousMatch.short != "2H")) {
-        _sendGoalNotification(
-          "Second Half Started!",
-          "${match.home.name} 🆚 ${match.away.name}",
-          match,
-        );
-      }
+    // Goal detection
+    if (match.homeScore != null &&
+        prevHome != null &&
+        match.homeScore! > prevHome) {
+      await _sendGoalNotification(
+        "Goooal ⚽! ${match.homeName} 🆚 ${match.awayName}",
+        "New score: ${match.homeName} ${match.homeScore} - ${match.awayScore} ${match.awayName}",
+        match,
+      );
+    }
+    if (match.awayScore != null &&
+        prevAway != null &&
+        match.awayScore! > prevAway) {
+      await _sendGoalNotification(
+        "Goooal ⚽! ${match.homeName} 🆚 ${match.awayName}",
+        "New score: ${match.homeName} ${match.homeScore} - ${match.awayScore} ${match.awayName}",
+        match,
+      );
+    }
 
-      if ((match.short == "FT" || match.short == "AET") &&
-          (previousMatch.short != "FT" || previousMatch.short != "AET")) {
-        String message =
-            match.short == "AET"
-                ? "Match Finished After Extra Time!"
-                : "Match Finished!";
-        _sendGoalNotification(
-          message,
-          "${match.home.name} ${match.homeScore}  🆚 ${match.awayScore} ${match.away.name}",
-          match,
-        );
-      }
+    // Half time
+    if (match.status == statusHalfTime &&
+        previousMatch?.status != statusHalfTime) {
+      await _sendGoalNotification(
+        "Half Time!",
+        "${match.homeName} ${match.homeScore}  🆚 ${match.awayScore} ${match.awayName}",
+        match,
+      );
+    }
 
-      if (match.short == "LIVE" && match.elapsed! <= 1) {
-        _sendGoalNotification(
-          "Match started ${match.elapsed!.abs()} minutes ago",
-          "${match.home.name} 🆚 ${match.away.name}",
-          match,
-        );
-      }
+    // Second half started
+    if (match.status == statusSecondHalf &&
+        previousMatch?.status != statusSecondHalf) {
+      await _sendGoalNotification(
+        "Second Half Started!",
+        "${match.homeName} 🆚 ${match.awayName}",
+        match,
+      );
+    }
+
+    // Full time
+    if (match.status == statusFullTime &&
+        previousMatch?.status != statusFullTime) {
+      await _sendGoalNotification(
+        "Match Finished!",
+        "${match.homeName} ${match.homeScore}  🆚 ${match.awayScore} ${match.awayName}",
+        match,
+      );
     }
   }
-  await prefs.setString('previous_matches', MatchConverter.encode(liveMatches));
 
+  await prefs.setString(
+    'previous_matches',
+    jsonEncode(liveMatches.map((m) => m.toJson()).toList()),
+  );
+
+  // Remove stale favorite matches
   List<Match> updatedMatches = [];
-
   for (var match in favoriteMatches) {
-    if (["FT", "CANC", "WO", "PEN", "AWD", "AET"].contains(match.short) ||
-        compareUtcToLocal(match.date)) {
-      await deleteMatch(match.id);
+    bool isFinished = match.status == statusFullTime;
+    bool hasPassed =
+        match.matchTime != null &&
+        compareUtcToLocal(
+          DateTime.fromMillisecondsSinceEpoch(
+            match.matchTime! * 1000,
+            isUtc: true,
+          ).toIso8601String(),
+        );
+
+    if (isFinished || hasPassed) {
+      await deleteMatch(match.matchId);
     } else {
       updatedMatches.add(match);
     }
-    await saveMatches(updatedMatches);
   }
+  await saveMatches(updatedMatches);
 }
 
 bool compareUtcToLocal(String utcDateString) {
-  // Parse the UTC date string and convert it to local time
   DateTime utcTime = DateTime.parse(utcDateString);
   DateTime localTime = utcTime.toLocal();
-
-  // Get current local time
   DateTime now = DateTime.now();
-
-  // Calculate the difference in duration
   Duration difference = now.difference(localTime);
 
-  bool hasPassed = false;
-
-  // Determine if it's hours or days
-  if (difference.inDays > 0) {
-    hasPassed = true;
-  } else if (difference.inHours > 1) {
-    hasPassed = true;
-  } else {
-    hasPassed = false;
-  }
-  return hasPassed;
+  if (difference.inDays > 0) return true;
+  if (difference.inHours > 1) return true;
+  return false;
 }
 
 Future<void> _sendGoalNotification(
@@ -134,37 +155,11 @@ Future<void> _sendGoalNotification(
   String body,
   Match match,
 ) async {
-  Map<String, dynamic> matchMap = {
-    'league': {
-      'id': match.league.id,
-      'name': match.league.name,
-      'image': match.league.image,
-      'country': match.league.country,
-      'countryFlag': match.league.countryFlag,
-    },
-    'home': {
-      'id': match.home.id,
-      'name': match.home.name,
-      'image': match.home.image,
-    },
-    'away': {
-      'id': match.away.id,
-      'name': match.away.name,
-      'image': match.away.image,
-    },
-    'id': match.id,
-    'homeScore': match.homeScore,
-    'awayScore': match.awayScore,
-    'date': match.date,
-    'elapsed': match.elapsed,
-    'short': match.short,
-    'halftimeScore': match.halftimeScore,
-    'extra': match.extra,
-  };
+  Map<String, dynamic> matchMap = match.toJson();
 
   String matchJson = jsonEncode(matchMap);
 
-  _playAlarm();
+  await _playAlarm();
   await AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
@@ -173,7 +168,9 @@ Future<void> _sendGoalNotification(
       body: body,
       notificationLayout: NotificationLayout.Default,
       largeIcon:
-          match.league.image.startsWith("http") ? match.league.image : null,
+          (match.leagueColor != null && match.leagueColor!.startsWith("http"))
+              ? match.leagueColor
+              : null,
       payload: {'match': matchJson},
     ),
     actionButtons: [
@@ -192,13 +189,12 @@ Future<void> _sendGoalNotification(
 }
 
 Future<void> _playAlarm() async {
-  final ringtonePlayer = FlutterRingtonePlayer(); // Create an instance
+  final ringtonePlayer = FlutterRingtonePlayer();
   await ringtonePlayer.play(
-    fromAsset: "assets/goal_alert.aac", // Custom sound from assets
-    //android: AndroidSounds.alarm, // Default system alarm sound on Android
-    ios: IosSounds.alarm, // Default system alarm sound on iOS
-    looping: false, // Play once
-    volume: 1.0, // Full volume
-    asAlarm: true, // Uses system alarm volume
+    fromAsset: "assets/goal_alert.aac",
+    ios: IosSounds.alarm,
+    looping: false,
+    volume: 1.0,
+    asAlarm: true,
   );
 }

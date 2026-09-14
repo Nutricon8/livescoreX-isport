@@ -57,11 +57,9 @@ class LiveItem extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  (match.short == "1H" || match.short == "2H")
-                      ? (match.elapsed != null
-                          ? "${match.elapsed}${match.extra != null ? "+${match.extra}’" : "’"}"
-                          : match.short)
-                      : match.short,
+                  match.status != null
+                      ? "${match.status}’${match.injuryTime != null ? "+${match.injuryTime}’" : ""}"
+                      : '-',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 12.0,
@@ -79,13 +77,13 @@ class LiveItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.home.image,
+                          imageString: match.homeId ?? '',
                           height: 16,
                           width: 16,
                         ),
                         SizedBox(width: 4),
                         Text(
-                          match.home.name,
+                          match.homeName ?? '',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -96,13 +94,13 @@ class LiveItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.away.image,
+                          imageString: match.awayId ?? '',
                           height: 16,
                           width: 16,
                         ),
                         SizedBox(width: 4),
                         Text(
-                          match.away.name,
+                          match.awayName ?? '',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -138,7 +136,7 @@ class LiveItem extends StatelessWidget {
                       children: [
                         Text(
                           textAlign: TextAlign.center,
-                          "${match.homeScore?.toInt() ?? '-'}",
+                          "${match.homeScore ?? '-'}",
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14.0,
@@ -148,7 +146,7 @@ class LiveItem extends StatelessWidget {
                         SizedBox(height: 4),
                         Text(
                           textAlign: TextAlign.center,
-                          "${match.awayScore?.toInt() ?? '-'}",
+                          "${match.awayScore ?? '-'}",
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14.0,

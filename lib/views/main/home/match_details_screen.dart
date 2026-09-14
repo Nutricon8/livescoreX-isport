@@ -55,9 +55,10 @@ class MatchDetailsScreen extends StatelessWidget {
                   LineupTab(match: match),
                   MatchesTab(match: match),
                   StandingsTab(
-                    homeTeamId: match.home.id,
-                    awayTeamId: match.away.id,
-                    leagueId: match.league.id,
+                    homeTeamId: match.homeId ?? '',
+                    awayTeamId: match.awayId ?? '',
+                    leagueId: match.leagueId,
+                    subLeagueId: match.subLeagueId ?? '',
                   ),
                 ],
               ),

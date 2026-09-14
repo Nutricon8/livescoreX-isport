@@ -37,24 +37,24 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
     setState(() {
       isHomeFavorite = favoriteTeams.any(
-        (team) => team.id == widget.match.home.id,
+        (team) => team.teamId == widget.match.homeId,
       );
       isAwayFavorite = favoriteTeams.any(
-        (team) => team.id == widget.match.away.id,
+        (team) => team.teamId == widget.match.awayId,
       );
 
       isFavoriteLeague = favoriteLeagues.any(
-        (league) => league.id == widget.match.league.id,
+        (league) => league.leagueId == widget.match.leagueId,
       );
     });
   }
 
   Future<void> _toggleFavorite(Team team, bool isHome) async {
     List<Team> favoriteTeams = await getTeams();
-    bool isFav = favoriteTeams.any((t) => t.id == team.id);
+    bool isFav = favoriteTeams.any((t) => t.teamId == team.teamId);
 
     if (isFav) {
-      await deleteTeam(team.id);
+      await deleteTeam(team.teamId);
     } else {
       await addTeam(team);
     }
@@ -70,10 +70,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   Future<void> _toggleFavoriteLeague(League league) async {
     List<League> favoriteLagues = await getLeagues();
-    bool isFav = favoriteLagues.any((l) => l.id == league.id);
+    bool isFav = favoriteLagues.any((l) => l.leagueId == league.leagueId);
 
     if (isFav) {
-      await deleteLeague(league.id);
+      await deleteLeague(league.leagueId);
     } else {
       await addLeague(league);
     }
@@ -95,12 +95,19 @@ class _CustomAppBarState extends State<CustomAppBar> {
       title: Column(
         children: [
           Text(
-            widget.match.league.name,
+            widget.match.leagueName ?? '',
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
-            formatFullDateTime(widget.match.date),
+            widget.match.matchTime != null
+                ? formatFullDateTime(
+                  DateTime.fromMillisecondsSinceEpoch(
+                    widget.match.matchTime! * 1000,
+                    isUtc: true,
+                  ).toIso8601String(),
+                )
+                : '-',
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
           ),
         ],
@@ -109,7 +116,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
       actions: [
         IconButton(
           padding: EdgeInsets.all(8),
-          onPressed: () => _toggleFavoriteLeague(widget.match.league),
+          onPressed: () {
+            final league = League(
+              leagueId: widget.match.leagueId,
+              subLeagueId: widget.match.subLeagueId,
+              name: widget.match.leagueName,
+              logo: widget.match.leagueColor, // Best available substitute
+              shortName: widget.match.leagueShortName,
+            );
+            _toggleFavoriteLeague(league);
+          },
           icon: Icon(
             Icons.star_rounded,
             color: isFavoriteLeague ? yellowColor : Colors.grey,
@@ -126,11 +142,26 @@ class _CustomAppBarState extends State<CustomAppBar> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildTeam(widget.match.home, isHomeFavorite, true),
+                  _buildTeam(
+                    Team(
+                      teamId: widget.match.homeId ?? '',
+                      leagueId: widget.match.leagueId,
+                      name: widget.match.homeName ?? '',
+                    ),
+                    isHomeFavorite,
+                    true,
+                  ),
                   Column(
                     children: [
                       Text(
-                        formatTime(widget.match.date),
+                        widget.match.matchTime != null
+                            ? formatTime(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                widget.match.matchTime! * 1000,
+                                isUtc: true,
+                              ).toIso8601String(),
+                            )
+                            : '-',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -138,7 +169,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        formatMatchDate(widget.match.date),
+                        widget.match.matchTime != null
+                            ? formatMatchDate(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                widget.match.matchTime! * 1000,
+                                isUtc: true,
+                              ).toIso8601String(),
+                            )
+                            : '-',
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
@@ -146,7 +184,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                     ],
                   ),
-                  _buildTeam(widget.match.away, isAwayFavorite, false),
+                  _buildTeam(
+                    Team(
+                      teamId: widget.match.awayId ?? '',
+                      leagueId: widget.match.leagueId,
+                      name: widget.match.awayName,
+                    ),
+                    isAwayFavorite,
+                    false,
+                  ),
                 ],
               ),
             ),
@@ -183,12 +229,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CustomImage(imageString: team.image, height: 40, width: 40),
+                CustomImage(
+                  imageString: team.logo ?? '',
+                  height: 40,
+                  width: 40,
+                ),
                 const SizedBox(height: 4),
                 SizedBox(
                   width: 80, // Set your preferred width here
                   child: Text(
-                    team.name,
+                    team.name ?? '',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -209,12 +259,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CustomImage(imageString: team.image, height: 40, width: 40),
+                CustomImage(
+                  imageString: team.logo ?? '',
+                  height: 40,
+                  width: 40,
+                ),
                 const SizedBox(height: 4),
                 SizedBox(
                   width: 80, // Set your preferred width here
                   child: Text(
-                    team.name,
+                    team.name ?? '',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

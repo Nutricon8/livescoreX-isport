@@ -22,10 +22,10 @@ class FavoriteLeague extends StatelessWidget {
         contentPadding: EdgeInsets.symmetric(horizontal: 8),
         title: Row(
           children: [
-            CustomImage(imageString: league.image, height: 16, width: 16),
+            CustomImage(imageString: league.logo ?? '', height: 16, width: 16),
             SizedBox(width: 4),
             Text(
-              league.name,
+              league.name ?? '',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ],

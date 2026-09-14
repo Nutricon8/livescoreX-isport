@@ -1,6 +1,7 @@
-import 'dart:async';
+  import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+import 'package:flutter/foundation.dart'; // Required for kIsWeb
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -33,7 +34,10 @@ bool isServiceRunning = false; // Flag to track if the service is running
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MobileAds.instance.initialize();
+  // Only initialize ads if the app is NOT running on the Web
+  if (!kIsWeb) {
+    await MobileAds.instance.initialize();
+  }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Request permission from the user
   bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
@@ -99,7 +103,7 @@ void onStart(ServiceInstance service) async {
 
     // Listen for custom invoke calls
     service.on('checkMatchUpdates').listen((event) async {
-      List<Match> liveMatches = await ApiService().getLiveMatches();
+      List<Match> liveMatches = await ApiService().getLiveMatches(true);
       await checkMatchUpdates(liveMatches);
     });
 
@@ -116,7 +120,7 @@ void onStart(ServiceInstance service) async {
 Future<void> run15SecondTask() async {
   while (isServiceRunning) {
     try {
-      List<Match> liveMatches = await ApiService().getLiveMatches();
+      List<Match> liveMatches = await ApiService().getLiveMatches(true);
       await checkMatchUpdates(liveMatches);
     } catch (e) {
       return;
@@ -169,7 +173,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ); // Convert JSON string to Map
 
             // Manually reconstruct the Match object
-            Match match = Match(
+            /*Match match = Match(
+              matchId: matchMap['matchId'],
               league: League(
                 id: matchMap['league']['id'],
                 name: matchMap['league']['name'],
@@ -202,7 +207,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               MaterialPageRoute(
                 builder: (context) => LiveMatchDetails(match: match),
               ),
-            );
+            );*/
           }
         }
       },
@@ -380,7 +385,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           iconTheme: IconThemeData(color: lightColorScheme.onSurface, size: 24),
         ),
 
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: lightColorScheme.surface,
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -398,7 +403,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: ZoomPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            //TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           },
         ),
       ),
@@ -535,7 +540,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           iconTheme: IconThemeData(color: darkColorScheme.onSurface),
         ),
 
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: darkColorScheme.onSecondary,
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -570,7 +575,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: ZoomPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            //TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           },
         ),
       ),

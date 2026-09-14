@@ -12,8 +12,15 @@ class FavoriteMatch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Parse the start_time string into a DateTime object
-    DateTime dateTime = DateTime.parse(match.date).toLocal();
+    // Convert matchTime (Unix seconds) into a DateTime
+    DateTime dateTime =
+        match.matchTime != null
+            ? DateTime.fromMillisecondsSinceEpoch(
+              match.matchTime! * 1000,
+              isUtc: true,
+            ).toLocal()
+            : DateTime.now();
+
     // Format the DateTime object to extract only the date (e.g., "01 Apr")
     String formattedDate = DateFormat('dd MMM').format(dateTime);
 
@@ -80,13 +87,13 @@ class FavoriteMatch extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.home.image,
+                          imageString: match.homeId ?? '',
                           height: 16,
                           width: 16,
                         ),
                         SizedBox(width: 4),
                         Text(
-                          match.home.name,
+                          match.homeName ?? '',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -97,13 +104,13 @@ class FavoriteMatch extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.away.image,
+                          imageString: match.awayId ?? '',
                           height: 16,
                           width: 16,
                         ),
                         SizedBox(width: 4),
                         Text(
-                          match.away.name,
+                          match.awayName ?? '',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

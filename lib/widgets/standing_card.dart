@@ -1,31 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:livescorex/utils/models/standing.dart';
 import 'package:livescorex/widgets/custom_image.dart';
 
 class StandingsCard extends StatelessWidget {
-  final int position;
-  final String team;
-  final String crest;
-  final int played;
-  final int won;
-  final int drawn;
-  final int lost;
-  final int goalDifference;
-  final int points;
-  final bool playing;
+  final Standing standing;
 
-  const StandingsCard({
-    Key? key,
-    required this.position,
-    required this.team,
-    required this.crest,
-    required this.played,
-    required this.won,
-    required this.drawn,
-    required this.lost,
-    required this.goalDifference,
-    required this.points,
-    required this.playing,
-  }) : super(key: key);
+  const StandingsCard({required this.standing, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +13,7 @@ class StandingsCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0.0)),
-      color: playing ? Colors.grey.withOpacity(0.4) : null, //
+      color: standing.played == 0 ? Colors.grey.withOpacity(0.4) : null, //
       elevation: 0,
       child: Container(
         decoration: BoxDecoration(
@@ -49,7 +29,7 @@ class StandingsCard extends StatelessWidget {
           minLeadingWidth: 8,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           leading: Text(
-            '$position',
+            standing.rank.toString(),
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
           ),
           title: Align(
@@ -62,11 +42,15 @@ class StandingsCard extends StatelessWidget {
                 mainAxisSize:
                     MainAxisSize.min, // Prevents Row from taking full width
                 children: [
-                  CustomImage(imageString: crest, height: 20, width: 20),
+                  CustomImage(
+                    imageString: standing.teamLogo,
+                    height: 20,
+                    width: 20,
+                  ),
                   const SizedBox(width: 8), // Adds spacing
                   Flexible(
                     child: Text(
-                      team,
+                      standing.teamName,
                       overflow: TextOverflow.ellipsis, // Prevents overflow
                       style: const TextStyle(
                         fontSize: 12,
@@ -83,17 +67,17 @@ class StandingsCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _buildStatText('$played'),
-                  _buildStatText('$won'),
-                  _buildStatText('$drawn'),
-                  _buildStatText('$lost'),
+                  _buildStatText('${standing.played}'),
+                  _buildStatText('${standing.won}'),
+                  _buildStatText('${standing.drawn}'),
+                  _buildStatText('${standing.lost}'),
                 ],
               ),
               const SizedBox(width: 4), // Adds spacing
               SizedBox(
                 width: 20, // Set a fixed width for consistency
                 child: Text(
-                  '$goalDifference', //+12
+                  '${standing.goalDifference}', //+12
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 12,
@@ -103,7 +87,7 @@ class StandingsCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '$points',
+                '${standing.points}',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,

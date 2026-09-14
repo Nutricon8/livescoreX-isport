@@ -1,7 +1,16 @@
 class MatchStatistics {
-  final String type;
-  final int home;
-  final int away;
+  final int? type;
+  final String? home;
+  final String? away;
 
-  MatchStatistics({required this.type, required this.home, required this.away});
+  MatchStatistics({this.type, this.home, this.away});
+
+  // Factory constructor to handle data mapping from your API response
+  factory MatchStatistics.fromJson(Map<String, dynamic> json) {
+    return MatchStatistics(
+      type: json['type'] as int?,
+      home: json['home']?.toString(),
+      away: json['away']?.toString(),
+    );
+  }
 }

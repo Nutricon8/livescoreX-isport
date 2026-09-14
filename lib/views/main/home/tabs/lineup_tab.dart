@@ -20,7 +20,7 @@ class _LineupTabState extends State<LineupTab> {
   @override
   void initState() {
     super.initState();
-    _lineupFuture = ApiService().getLineups(widget.match.id);
+    _lineupFuture = ApiService().getLineups(widget.match.matchId);
   }
 
   @override
@@ -31,48 +31,52 @@ class _LineupTabState extends State<LineupTab> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
+          }
+          if (snapshot.hasError) {
             return Center(
-              child: Text("An error occurred while fetching lineup data"),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text("No lineup data available for this match"),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
             );
           }
-          List<Player> players = snapshot.data!;
-          return _buildField(players);
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text('No lineup data available for this match'),
+            );
+          }
+          return _buildField(snapshot.data!);
         },
       ),
     );
   }
 
   Widget _buildField(List<Player> players) {
-    List<Player> homePlayers =
-        players
-            .where((player) => player.team.id == widget.match.home.id)
-            .toList();
-    List<Player> awayPlayers =
-        players
-            .where((player) => player.team.id == widget.match.away.id)
-            .toList();
+    // Players are tagged teamId='home' or 'away' by getLineups.
+    final homePlayers = players.where((p) => p.teamId == 'home').toList();
+    final awayPlayers = players.where((p) => p.teamId == 'away').toList();
+
     return SingleChildScrollView(
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            height: 676,
-            decoration: BoxDecoration(color: greenColor),
-            child: Stack(
-              children: [
-                _buildPitchLines(),
-                ...players
-                    .map((player) => _buildPlayer(context, player))
-                    .toList(),
-              ],
-            ),
-          ),
-          SizedBox(height: 10),
+          // Pitch visualization — disabled for now (no grid coordinates in
+          // the API response), but kept so you can re-enable if needed.
+          // Container(
+          //   width: double.infinity,
+          //   height: 676,
+          //   decoration: BoxDecoration(color: greenColor),
+          //   child: Stack(
+          //     children: [
+          //       _buildPitchLines(),
+          //       ...players.map((p) => _buildPlayer(context, p)).toList(),
+          //     ],
+          //   ),
+          // ),
+          const SizedBox(height: 10),
           _buildLineup(homePlayers, awayPlayers, widget.match),
         ],
       ),
@@ -84,88 +88,42 @@ class _LineupTabState extends State<LineupTab> {
   }
 
   Widget _buildPlayer(BuildContext context, Player player) {
-    if (player.grid != Offset.zero) {
-      return Positioned(
-        left: player.grid.dx * MediaQuery.of(context).size.width - 20,
-        top: player.grid.dy * 676 - 20,
-        child: Column(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color:
-                    player.team.id == widget.match.home.id
-                        ? redColor
-                        : blueColor,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                player.shirtNumber.toString(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12.0,
-                ),
-              ),
-            ),
-            Text(
-              player.name,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12.0,
-              ),
-            ),
-          ],
-        ),
-      );
-    } else {
-      return SizedBox(); // If player.grid is Offset.zero, return an empty widget
-    }
+    // Disabled — no grid coordinates from the API. Kept for future use.
+    return const SizedBox.shrink();
   }
 }
 
 class PitchPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3;
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
 
-    // Full pitch
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, 676), paint);
-
-    // Center Line
     canvas.drawLine(
       Offset(0, size.height / 2),
       Offset(size.width, size.height / 2),
       paint,
     );
     canvas.drawCircle(Offset(size.width / 2, size.height / 2), 50, paint);
-
-    // Penalty Boxes & Goals (Fixed size)
     _drawPenaltyArea(canvas, size, paint, top: true);
     _drawPenaltyArea(canvas, size, paint, top: false);
   }
 
   void _drawPenaltyArea(
-    Canvas canvas,
-    Size size,
-    Paint paint, {
-    required bool top,
-  }) {
-    double y = top ? -20 : size.height - 80;
-    double ySmall = top ? -40 : size.height - 40;
-    double yArc = top ? 20 : size.height - 60;
+      Canvas canvas,
+      Size size,
+      Paint paint, {
+        required bool top,
+      }) {
+    final y = top ? -20.0 : size.height - 80;
+    final ySmall = top ? -40.0 : size.height - 40;
+    final yArc = top ? 20.0 : size.height - 60;
 
-    // Larger penalty box
     canvas.drawRect(Rect.fromLTWH(50, y, size.width - 100, 100), paint);
-    // Larger inner penalty box
     canvas.drawRect(Rect.fromLTWH(130, ySmall, size.width - 260, 80), paint);
-    // Penalty arc
     canvas.drawOval(Rect.fromLTWH(size.width / 2 - 30, yArc, 60, 40), paint);
   }
 
@@ -173,87 +131,89 @@ class PitchPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-//lineups list:
-
 Widget _buildLineup(
-  List<Player> homePlayers,
-  List<Player> awayPlayers,
-  Match match,
-) {
+    List<Player> homePlayers,
+    List<Player> awayPlayers,
+    Match match,
+    ) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 8.0),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CustomImage(
-                  imageString: match.home.image,
-                  width: 40,
-                  height: 40,
-                ),
-                SizedBox(
-                  width: 80,
-                  child: Text(
-                    match.home.name,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
-                    textAlign: TextAlign.center,
+        // ---- Home column ----
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CustomImage(
+                    imageString: '',
+                    width: 40,
+                    height: 40,
                   ),
-                ),
-              ],
-            ),
-            // Home Team Starting 11
-            _buildTeamSection("Starting 11", homePlayers, isSubstitute: false),
-            // Home Team Substitutes
-            _buildTeamSection("Substitutes", homePlayers, isSubstitute: true),
-          ],
+                  SizedBox(
+                    width: 80,
+                    child: Text(
+                      match.homeName ?? '',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+              _buildTeamSection('Starting 11', homePlayers, isSubstitute: false),
+              _buildTeamSection('Substitutes', homePlayers, isSubstitute: true),
+            ],
+          ),
         ),
 
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CustomImage(
-                  imageString: match.away.image,
-                  width: 40,
-                  height: 40,
-                ),
-                SizedBox(
-                  width: 80,
-                  child: Text(
-                    match.away.name,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
-                    textAlign: TextAlign.center,
+        const SizedBox(width: 8),
+
+        // ---- Away column ----
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CustomImage(
+                    imageString: '',
+                    width: 40,
+                    height: 40,
                   ),
-                ),
-              ],
-            ),
-            // Away Team Starting 11
-            _buildTeamSection("Starting 11", awayPlayers, isSubstitute: false),
-            // Away Team Substitutes
-            _buildTeamSection("Substitutes", awayPlayers, isSubstitute: true),
-          ],
+                  SizedBox(
+                    width: 80,
+                    child: Text(
+                      match.awayName ?? '',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+              _buildTeamSection('Starting 11', awayPlayers, isSubstitute: false),
+              _buildTeamSection('Substitutes', awayPlayers, isSubstitute: true),
+            ],
+          ),
         ),
       ],
     ),
@@ -261,19 +221,18 @@ Widget _buildLineup(
 }
 
 Widget _buildTeamSection(
-  String title,
-  List<Player> players, {
-  bool isSubstitute = false,
-}) {
-  List<Player> filteredPlayers =
-      players
-          .where(
-            (player) =>
-                isSubstitute
-                    ? player.grid == Offset.zero
-                    : player.grid != Offset.zero,
-          )
-          .toList();
+    String title,
+    List<Player> players, {
+      bool isSubstitute = false,
+    }) {
+  // We can't distinguish starters from substitutes based on grid coords
+  // (the API doesn't provide them), but getLineups() already puts backups
+  // into the list with the same teamId, so all players show under
+  // "Starting 11" for now. If you later want to split, tag players during
+  // parsing (see `isSubstitute` param in `_appendLineupPlayers`).
+  final filtered = players.toList();
+
+  if (filtered.isEmpty) return const SizedBox.shrink();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,11 +244,11 @@ Widget _buildTeamSection(
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
-      ...filteredPlayers.map((player) {
+      ...filtered.map((player) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(
-            '${player.shirtNumber}. ${player.name}',
+            '${player.number}. ${player.name}',
             style: const TextStyle(fontSize: 14),
           ),
         );

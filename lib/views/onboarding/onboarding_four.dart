@@ -23,8 +23,8 @@ class OnboardingFourState extends State<OnboardingFour> {
   List<Team> _teams = [];
   bool isLoading = true;
 
-  List<int> favoriteTeamIds = [];
-  List<int> favoriteLeagueIds = [];
+  List<String> favoriteTeamIds = [];
+  List<String> favoriteLeagueIds = [];
 
   @override
   void initState() {
@@ -42,19 +42,16 @@ class OnboardingFourState extends State<OnboardingFour> {
   }
 
   Future<void> fetchTeams() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
     try {
-      List<Team> fetchedTeams = await ApiService().getPremierLeagueTeams();
+      final fetchedTeams = await ApiService().getAllTeams();
       setState(() {
         _teams = fetchedTeams;
         isLoading = false;
       });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+    } catch (e, st) {
+      print('FETCH TEAMS ERROR: $e\n$st');  // 👈 you will now see the real error
+      setState(() => isLoading = false);
     }
   }
 
@@ -62,40 +59,40 @@ class OnboardingFourState extends State<OnboardingFour> {
     List<Team> teams = await getTeams();
     List<League> leagues = await getLeagues();
     setState(() {
-      favoriteTeamIds = teams.map((team) => team.id).toList();
-      favoriteLeagueIds = leagues.map((league) => league.id).toList();
+      favoriteTeamIds = teams.map((team) => team.teamId).toList();
+      favoriteLeagueIds = leagues.map((league) => league.leagueId).toList();
     });
   }
 
   Future<void> toggleFavorite(Team team) async {
     setState(() {
-      if (favoriteTeamIds.contains(team.id)) {
-        favoriteTeamIds.remove(team.id);
+      if (favoriteTeamIds.contains(team.teamId)) {
+        favoriteTeamIds.remove(team.teamId);
       } else {
-        favoriteTeamIds.add(team.id);
+        favoriteTeamIds.add(team.teamId);
       }
     });
 
     List<Team> teams =
         favoriteTeamIds
-            .map((id) => _teams.firstWhere((t) => t.id == id))
+            .map((id) => _teams.firstWhere((t) => t.teamId == id))
             .toList();
     await saveTeams(teams);
   }
 
   Future<void> toggleFavoriteLeague(League league) async {
     setState(() {
-      if (favoriteLeagueIds.contains(league.id)) {
-        favoriteLeagueIds.remove(league.id);
+      if (favoriteLeagueIds.contains(league.leagueId)) {
+        favoriteLeagueIds.remove(league.leagueId);
       } else {
-        favoriteLeagueIds.add(league.id);
+        favoriteLeagueIds.add(league.leagueId);
       }
     });
 
     final leaguesList = await _leaguesFuture; // ✅ Await the future
     List<League> leagues =
         favoriteLeagueIds
-            .map((id) => leaguesList.firstWhere((l) => l.id == id))
+            .map((id) => leaguesList.firstWhere((l) => l.leagueId == id))
             .toList();
 
     await saveLeagues(leagues);
@@ -175,7 +172,7 @@ class OnboardingFourState extends State<OnboardingFour> {
                                 league: league,
 
                                 isFavorite: favoriteLeagueIds.contains(
-                                  league.id,
+                                  league.leagueId,
                                 ),
                                 onFavoriteToggle: toggleFavoriteLeague,
                               ),
@@ -227,7 +224,7 @@ class OnboardingFourState extends State<OnboardingFour> {
                           Team team = _teams[index];
                           return TeamTile(
                             team: team,
-                            isFavorite: favoriteTeamIds.contains(team.id),
+                            isFavorite: favoriteTeamIds.contains(team.teamId),
                             onFavoriteToggle: toggleFavorite,
                           );
                         },
@@ -285,7 +282,7 @@ class LeagueLogo extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     CustomImage(
-                      imageString: league.image,
+                      imageString: league.logo ?? '',
                       width: double.infinity,
                       height: double.infinity,
                       isFilled: true,
@@ -322,7 +319,7 @@ class LeagueLogo extends StatelessWidget {
         SizedBox(
           width: 90, // Same width as the image
           child: Text(
-            league.name,
+            league.name ?? '',
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -365,10 +362,14 @@ class TeamTile extends StatelessWidget {
 
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(4),
-          child: CustomImage(imageString: team.image, width: 32, height: 32),
+          child: CustomImage(
+            imageString: team.logo ?? '',
+            width: 32,
+            height: 32,
+          ),
         ),
         title: Text(
-          team.name,
+          team.name ?? '',
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         trailing: IconButton(

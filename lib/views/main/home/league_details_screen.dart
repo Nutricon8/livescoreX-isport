@@ -21,7 +21,12 @@ class LeagueDetailsScreenState extends State<LeagueDetailsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: LeagueAppbar(league: widget.league),
-      body: StandingsTab(leagueId: widget.league.id),
+      body: StandingsTab(
+        leagueId: widget.league.leagueId,
+        subLeagueId: widget.league.subLeagueName ?? '',
+        awayTeamId: '',
+        homeTeamId: '',
+      ),
     );
   }
 }

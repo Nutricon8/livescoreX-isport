@@ -109,10 +109,10 @@ class FavoritesScreenState extends State<FavoritesScreen> {
             onRemove:
                 () async => {
                   //Match match
-                  await deleteMatch(match.id), // Remove from storage
+                  await deleteMatch(match.matchId), // Remove from storage
                   setState(() {
                     _savedMatches.removeWhere(
-                      (m) => m.id == match.id,
+                      (m) => m.matchId == match.matchId,
                     ); // Remove from UI
                   }),
                 },
@@ -150,9 +150,11 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                   team: team,
                   onRemove:
                       () async => {
-                        await deleteTeam(team.id),
+                        await deleteTeam(team.teamId),
                         setState(() {
-                          _savedTeams.removeWhere((m) => m.id == team.id);
+                          _savedTeams.removeWhere(
+                            (t) => t.teamId == team.teamId,
+                          );
                         }),
                       },
                 );
@@ -192,10 +194,10 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                   league: league,
                   onRemove:
                       () async => {
-                        await deleteLeague(league.id),
+                        await deleteLeague(league.leagueId),
                         setState(() {
                           _savedCompetitions.removeWhere(
-                            (m) => m.id == league.id,
+                            (l) => l.leagueId == league.leagueId,
                           );
                         }),
                       },

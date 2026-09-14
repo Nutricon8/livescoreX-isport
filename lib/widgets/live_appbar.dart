@@ -25,12 +25,19 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Column(
         children: [
           Text(
-            match.league.name,
+            match.leagueName ?? '',
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 4),
           Text(
-            formatFullDateTime(match.date),
+            match.matchTime != null
+                ? formatFullDateTime(
+                  DateTime.fromMillisecondsSinceEpoch(
+                    match.matchTime! * 1000,
+                    isUtc: true,
+                  ).toIso8601String(),
+                )
+                : '-',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
           ),
         ],
@@ -38,13 +45,11 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       actions: [
         Padding(
-          padding: EdgeInsets.only(right: 16.0), // Adjust spacing as needed
+          padding: EdgeInsets.only(right: 16.0),
           child: Text(
-            (match.short == "1H" || match.short == "2H")
-                ? (match.elapsed != null
-                    ? "${match.elapsed}${match.extra != null ? "+${match.extra}’" : "’"}"
-                    : match.short)
-                : match.short,
+            match.status != null
+                ? "${match.status}’${match.injuryTime != null ? "+${match.injuryTime}’" : ""}"
+                : '-',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 12.0,
@@ -68,13 +73,13 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Column(
                     children: [
                       CustomImage(
-                        imageString: match.home.image,
+                        imageString: match.homeId ?? '',
                         height: 40,
                         width: 40,
                       ),
                       SizedBox(height: 4),
                       Text(
-                        match.home.name,
+                        match.homeName ?? '',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -88,7 +93,7 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        "${match.homeScore?.toInt() ?? '-'}-${match.awayScore?.toInt() ?? '-'}",
+                        "${match.homeScore ?? '-'}-${match.awayScore ?? '-'}",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -96,9 +101,10 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        match.halftimeScore != null
-                            ? 'HT ${match.halftimeScore!}'
-                            : match.short,
+                        match.homeHalfScore != null &&
+                                match.awayHalfScore != null
+                            ? 'HT ${match.homeHalfScore}-${match.awayHalfScore}'
+                            : (match.status?.toString() ?? '-'),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
@@ -110,13 +116,13 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Column(
                     children: [
                       CustomImage(
-                        imageString: match.away.image,
+                        imageString: match.awayId ?? '',
                         height: 40,
                         width: 40,
                       ),
                       SizedBox(height: 4),
                       Text(
-                        match.away.name,
+                        match.awayName ?? '',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

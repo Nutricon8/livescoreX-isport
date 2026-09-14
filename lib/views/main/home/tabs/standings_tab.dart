@@ -5,14 +5,16 @@ import 'package:livescorex/utils/models/standing.dart';
 import '../../../../widgets/standing_card.dart';
 
 class StandingsTab extends StatefulWidget {
-  final int homeTeamId;
-  final int awayTeamId;
-  final int leagueId;
+  final String homeTeamId;
+  final String awayTeamId;
+  final String leagueId;
+  final String subLeagueId;
 
   const StandingsTab({
-    this.homeTeamId = 0,
-    this.awayTeamId = 0,
-    this.leagueId = 0,
+    required this.homeTeamId,
+    required this.awayTeamId,
+    required this.leagueId,
+    required this.subLeagueId,
     super.key,
   });
 
@@ -20,10 +22,13 @@ class StandingsTab extends StatefulWidget {
   _StandingsTabState createState() => _StandingsTabState();
 }
 
-class _StandingsTabState extends State<StandingsTab> {
+class _StandingsTabState extends State<StandingsTab>
+    with AutomaticKeepAliveClientMixin {
   @override
-  bool get wantKeepAlive => true; // Keep widget alive
+  bool get wantKeepAlive => true;
+
   late Future<List<Standing>> futureStandings;
+
   @override
   void initState() {
     super.initState();
@@ -32,97 +37,85 @@ class _StandingsTabState extends State<StandingsTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
+
     return Card(
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Align title to the left
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ---- Header row ----
           ListTile(
             horizontalTitleGap: 8,
             minLeadingWidth: 0,
             contentPadding: const EdgeInsets.only(left: 12.0, right: 4),
-            leading: Text(
+            leading: const Text(
               '#',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
             ),
-            title: Text(
+            title: const Text(
               'Team',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
             ),
-
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    _buildStatText('M'),
-                    _buildStatText('W'),
-                    _buildStatText('D'),
-                    _buildStatText('L'),
-                  ],
-                ),
-                const SizedBox(width: 4), // Adds spacing
-                SizedBox(
-                  width: 20, // Set a fixed width for consistency
-                  child: Text(
-                    'GD',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
+                _buildStatText('M'),
+                _buildStatText('W'),
+                _buildStatText('D'),
+                _buildStatText('L'),
                 const SizedBox(width: 4),
-                Text(
-                  'PTS',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                _buildStatText('GD'),
+                const SizedBox(width: 4),
+                const SizedBox(
+                  width: 20,
+                  child: Text(
+                    'PTS',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          // Standings ListView
+          // ---- Standings list ----
           Expanded(
             child: FutureBuilder<List<Standing>>(
               future: futureStandings,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
                   return Center(
-                    child: Text('An error occured while fetching standings'),
-                  );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No standings available'));
-                } else {
-                  final standingsList = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: standingsList.length,
-                    itemBuilder: (context, index) {
-                      final standing = standingsList[index];
-                      return StandingsCard(
-                        position: standing.position,
-                        team: standing.team,
-                        crest: standing.crest,
-                        played: standing.played,
-                        won: standing.won,
-                        drawn: standing.drawn,
-                        lost: standing.lost,
-                        goalDifference: standing.goalDifference,
-                        points: standing.points,
-                        playing:
-                            (standing.id == widget.homeTeamId) ||
-                            (standing.id == widget.awayTeamId),
-                      );
-                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'Error: ${snapshot.error}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
                   );
                 }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No standings available'));
+                }
+
+                final standingsList = snapshot.data!;
+                return ListView.builder(
+                  itemCount: standingsList.length,
+                  itemBuilder: (context, index) {
+                    final standing = standingsList[index];
+                    return StandingsCard(standing: standing);
+                  },
+                );
               },
             ),
           ),
@@ -134,7 +127,7 @@ class _StandingsTabState extends State<StandingsTab> {
 
 Widget _buildStatText(String value) {
   return SizedBox(
-    width: 20, // Set a fixed width for consistency
+    width: 20,
     child: Text(
       value,
       textAlign: TextAlign.center,

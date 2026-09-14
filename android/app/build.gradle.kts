@@ -1,4 +1,5 @@
 import java.util.Properties
+import com.android.build.api.dsl.ApplicationExtension
 
 plugins {
     id("com.android.application")
@@ -18,28 +19,21 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
-android {
+// Modern AGP 9.0+ configuration interface
+configure<ApplicationExtension> {
     namespace = "com.livescorex"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973" // Explicitly set the required NDK
+    compileSdk = 36//flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion//"27.0.12077973" // Explicitly set the required NDK
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.livescorex"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        //minSdk = flutter.minSdkVersion = 23
-        minSdk = 23
-        targetSdk = flutter.targetSdkVersion
+        minSdk = flutter.minSdkVersion
+        targetSdk = 36//flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -53,33 +47,22 @@ android {
         }
     }
 
-
     buildTypes {
         release {
-            //signingConfig = signingConfigs.getByName("debug")
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
-
-        /*getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }*/
     }
-
 }
 
-/*dependencies {
-    // Existing dependencies
-    implementation("androidx.work:work-runtime:2.10.0") // Add the work-runtime dependency
-}*/
+// Modern compilerOptions DSL block
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
 
 flutter {
     source = "../.."

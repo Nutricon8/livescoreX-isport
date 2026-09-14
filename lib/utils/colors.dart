@@ -1,4 +1,3 @@
-// lib/utils/colors.dart
 import 'package:flutter/material.dart';
 
 // Define color constants
