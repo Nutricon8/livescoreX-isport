@@ -17,6 +17,8 @@ class Match {
   final String? awayName;
   final int? homeScore;
   final int? awayScore;
+  final String? homeTeamLogo;
+  final String? awayTeamLogo;
   final int? homeHalfScore;
   final int? awayHalfScore;
   final int? homeRed;
@@ -60,6 +62,8 @@ class Match {
     this.awayName,
     this.homeScore,
     this.awayScore,
+    this.homeTeamLogo,
+    this.awayTeamLogo,
     this.homeHalfScore,
     this.awayHalfScore,
     this.homeRed,
@@ -84,6 +88,15 @@ class Match {
     this.isFavorite = false,
   });
 
+  static const String _proxyOrigin =
+      'https://isport-api-production.up.railway.app';
+
+  static String? _resolveLogo(String? logo) {
+    if (logo == null || logo.isEmpty) return null;
+    if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
+    return '$_proxyOrigin$logo';
+  }
+
   // Factory constructor to handle data mapping from your API response
   factory Match.fromJson(Map<String, dynamic> json) {
     return Match(
@@ -104,6 +117,8 @@ class Match {
       awayName: json['awayName'] as String?,
       homeScore: json['homeScore'] as int?,
       awayScore: json['awayScore'] as int?,
+      homeTeamLogo: _resolveLogo(json['homeTeamLogo'] as String?),
+      awayTeamLogo: _resolveLogo(json['awayTeamLogo'] as String?),
       homeHalfScore: json['homeHalfScore'] as int?,
       awayHalfScore: json['awayHalfScore'] as int?,
       homeRed: json['homeRed'] as int?,
@@ -130,44 +145,44 @@ class Match {
   }
 
   Map<String, dynamic> toJson() => {
-    'matchId': matchId,
-    'leagueType': leagueType,
-    'leagueId': leagueId,
-    'leagueName': leagueName,
-    'leagueShortName': leagueShortName,
-    'leagueColor': leagueColor,
-    'subLeagueId': subLeagueId,
-    'subLeagueName': subLeagueName,
-    'matchTime': matchTime,
-    'halfStartTime': halfStartTime,
-    'status': status,
-    'homeId': homeId,
-    'homeName': homeName,
-    'awayId': awayId,
-    'awayName': awayName,
-    'homeScore': homeScore,
-    'awayScore': awayScore,
-    'homeHalfScore': homeHalfScore,
-    'awayHalfScore': awayHalfScore,
-    'homeRed': homeRed,
-    'awayRed': awayRed,
-    'homeYellow': homeYellow,
-    'awayYellow': awayYellow,
-    'homeCorner': homeCorner,
-    'awayCorner': awayCorner,
-    'homeRank': homeRank,
-    'awayRank': awayRank,
-    'season': season,
-    'round': round,
-    'group': group,
-    'location': location,
-    'weather': weather,
-    'temperature': temperature,
-    'explain': explain,
-    'hasLineup': hasLineup,
-    'neutral': neutral,
-    'injuryTime': injuryTime,
-    'updateTime': updateTime,
-    'isFavorite': isFavorite,
-  };
+        'matchId': matchId,
+        'leagueType': leagueType,
+        'leagueId': leagueId,
+        'leagueName': leagueName,
+        'leagueShortName': leagueShortName,
+        'leagueColor': leagueColor,
+        'subLeagueId': subLeagueId,
+        'subLeagueName': subLeagueName,
+        'matchTime': matchTime,
+        'halfStartTime': halfStartTime,
+        'status': status,
+        'homeId': homeId,
+        'homeName': homeName,
+        'awayId': awayId,
+        'awayName': awayName,
+        'homeScore': homeScore,
+        'awayScore': awayScore,
+        'homeHalfScore': homeHalfScore,
+        'awayHalfScore': awayHalfScore,
+        'homeRed': homeRed,
+        'awayRed': awayRed,
+        'homeYellow': homeYellow,
+        'awayYellow': awayYellow,
+        'homeCorner': homeCorner,
+        'awayCorner': awayCorner,
+        'homeRank': homeRank,
+        'awayRank': awayRank,
+        'season': season,
+        'round': round,
+        'group': group,
+        'location': location,
+        'weather': weather,
+        'temperature': temperature,
+        'explain': explain,
+        'hasLineup': hasLineup,
+        'neutral': neutral,
+        'injuryTime': injuryTime,
+        'updateTime': updateTime,
+        'isFavorite': isFavorite,
+      };
 }

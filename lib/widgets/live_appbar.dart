@@ -10,8 +10,8 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Size preferredSize;
 
   LiveAppBar({required this.match, Key? key})
-    : preferredSize = const Size.fromHeight(120.0),
-      super(key: key);
+      : preferredSize = const Size.fromHeight(120.0),
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +32,11 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
           Text(
             match.matchTime != null
                 ? formatFullDateTime(
-                  DateTime.fromMillisecondsSinceEpoch(
-                    match.matchTime! * 1000,
-                    isUtc: true,
-                  ).toIso8601String(),
-                )
+                    DateTime.fromMillisecondsSinceEpoch(
+                      match.matchTime! * 1000,
+                      isUtc: true,
+                    ).toIso8601String(),
+                  )
                 : '-',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
           ),
@@ -73,7 +73,7 @@ class LiveAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Column(
                     children: [
                       CustomImage(
-                        imageString: match.homeId ?? '',
+                        imageString: match.homeTeamLogo ?? '',
                         height: 40,
                         width: 40,
                       ),

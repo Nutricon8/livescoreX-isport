@@ -77,7 +77,7 @@ class LiveItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.homeId ?? '',
+                          imageString: match.homeTeamLogo ?? '',
                           height: 16,
                           width: 16,
                         ),

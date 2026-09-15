@@ -48,7 +48,7 @@ class MatchCard extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.leagueColor ?? '',
+                          imageString: match.leagueId ?? '',
                           height: 20,
                           width: 16,
                         ),
@@ -65,11 +65,11 @@ class MatchCard extends StatelessWidget {
                     Text(
                       match.matchTime != null
                           ? formatUtcDate(
-                            DateTime.fromMillisecondsSinceEpoch(
-                              match.matchTime! * 1000,
-                              isUtc: true,
-                            ).toIso8601String(),
-                          )
+                              DateTime.fromMillisecondsSinceEpoch(
+                                match.matchTime! * 1000,
+                                isUtc: true,
+                              ).toIso8601String(),
+                            )
                           : '-',
                       style: const TextStyle(
                         fontWeight: FontWeight.w400,
@@ -92,7 +92,7 @@ class MatchCard extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.homeId ?? '',
+                          imageString: match.homeTeamLogo ?? '',
                           height: 20,
                           width: 20,
                         ),
@@ -129,7 +129,7 @@ class MatchCard extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.awayId ?? '',
+                          imageString: match.awayTeamLogo ?? '',
                           height: 20,
                           width: 20,
                         ),
