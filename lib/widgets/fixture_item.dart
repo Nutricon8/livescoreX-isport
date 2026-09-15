@@ -21,13 +21,12 @@ class FixtureItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Convert the matchTime (Unix seconds) into a DateTime
-    DateTime dateTime =
-        match.matchTime != null
-            ? DateTime.fromMillisecondsSinceEpoch(
-              match.matchTime! * 1000,
-              isUtc: true,
-            ).toLocal()
-            : DateTime.now();
+    DateTime dateTime = match.matchTime != null
+        ? DateTime.fromMillisecondsSinceEpoch(
+            match.matchTime! * 1000,
+            isUtc: true,
+          ).toLocal()
+        : DateTime.now();
 
     // Format the DateTime object to extract only the time in "HH:mm" format
     String formattedTime = DateFormat('HH:mm').format(dateTime);
@@ -85,7 +84,7 @@ class FixtureItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.homeId ?? '',
+                          imageString: match.homeTeamLogo ?? '',
                           height: 16,
                           width: 16,
                         ),

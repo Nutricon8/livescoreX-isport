@@ -13,13 +13,12 @@ class FavoriteMatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Convert matchTime (Unix seconds) into a DateTime
-    DateTime dateTime =
-        match.matchTime != null
-            ? DateTime.fromMillisecondsSinceEpoch(
-              match.matchTime! * 1000,
-              isUtc: true,
-            ).toLocal()
-            : DateTime.now();
+    DateTime dateTime = match.matchTime != null
+        ? DateTime.fromMillisecondsSinceEpoch(
+            match.matchTime! * 1000,
+            isUtc: true,
+          ).toLocal()
+        : DateTime.now();
 
     // Format the DateTime object to extract only the date (e.g., "01 Apr")
     String formattedDate = DateFormat('dd MMM').format(dateTime);
@@ -87,7 +86,7 @@ class FavoriteMatch extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.homeId ?? '',
+                          imageString: match.homeTeamLogo ?? '',
                           height: 16,
                           width: 16,
                         ),
