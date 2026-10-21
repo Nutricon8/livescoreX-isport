@@ -82,11 +82,15 @@ class LiveItem extends StatelessWidget {
                           width: 16,
                         ),
                         SizedBox(width: 4),
-                        Text(
-                          match.homeName ?? '',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                        Flexible(
+                          child: Text(
+                            match.homeName ?? '',
+                            overflow:
+                                TextOverflow.ellipsis, // Prevents overflow
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -94,16 +98,20 @@ class LiveItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.awayId ?? '',
+                          imageString: match.awayTeamLogo ?? '',
                           height: 16,
                           width: 16,
                         ),
                         SizedBox(width: 4),
-                        Text(
-                          match.awayName ?? '',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                        Flexible(
+                          child: Text(
+                            match.awayName ?? '',
+                            overflow:
+                                TextOverflow.ellipsis, // Prevents overflow
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],

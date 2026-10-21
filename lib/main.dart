@@ -1,4 +1,4 @@
-  import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/foundation.dart'; // Required for kIsWeb
@@ -240,10 +240,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'LivescoreX',
-      themeMode:
-          Provider.of<ThemeProvider>(context).isDarkMode
-              ? ThemeMode.dark
-              : ThemeMode.light,
+      themeMode: Provider.of<ThemeProvider>(context).isDarkMode
+          ? ThemeMode.dark
+          : ThemeMode.light,
       navigatorKey: MyApp.navigatorKey,
       // 👇 Apply SafeArea globally using the builder
       builder: (context, child) {
@@ -256,7 +255,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         brightness: Brightness.light,
         fontFamily: 'Roboto',
         scaffoldBackgroundColor: lightColorScheme.surface,
-
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: lightColorScheme.primary,
@@ -269,7 +267,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             //textStyle: TextStyle(color: lightColorScheme.surface, fontSize: 16),
           ),
         ),
-
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: lightColorScheme.primary,
@@ -281,13 +278,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             side: BorderSide(color: lightColorScheme.primary),
           ),
         ),
-
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: lightColorScheme.onSurface,
           ),
         ),
-
         inputDecorationTheme: InputDecorationTheme(
           labelStyle: TextStyle(color: lightColorScheme.onSurface),
           filled: true,
@@ -305,7 +300,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             borderSide: BorderSide(color: lightColorScheme.onSurface),
           ),
         ),
-
         textTheme: TextTheme(
           displayLarge: TextStyle(
             fontSize: 57,
@@ -374,7 +368,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             color: lightColorScheme.onSurface,
           ),
         ),
-
         appBarTheme: AppBarTheme(
           backgroundColor: lightColorScheme.surface,
           elevation: 0,
@@ -384,7 +377,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ),
           iconTheme: IconThemeData(color: lightColorScheme.onSurface, size: 24),
         ),
-
         cardTheme: CardThemeData(
           color: lightColorScheme.surface,
           elevation: 2,
@@ -414,7 +406,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         colorScheme: darkColorScheme,
         brightness: Brightness.dark,
         scaffoldBackgroundColor: darkColorScheme.surface,
-
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: darkColorScheme.primary,
@@ -427,7 +418,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             textStyle: TextStyle(color: darkColorScheme.surface, fontSize: 16),
           ),
         ),
-
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: darkColorScheme.primary,
@@ -439,13 +429,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             side: BorderSide(color: darkColorScheme.primary),
           ),
         ),
-
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: darkColorScheme.onSurface,
           ),
         ),
-
         inputDecorationTheme: InputDecorationTheme(
           labelStyle: TextStyle(color: darkColorScheme.onSurface),
           filled: true,
@@ -463,7 +451,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             borderSide: BorderSide(color: darkColorScheme.onSurface),
           ),
         ),
-
         textTheme: TextTheme(
           displayLarge: TextStyle(
             fontSize: 57,
@@ -529,7 +516,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             color: darkColorScheme.onSurface,
           ),
         ),
-
         appBarTheme: AppBarTheme(
           backgroundColor: darkColorScheme.surface,
           elevation: 0,
@@ -539,7 +525,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ),
           iconTheme: IconThemeData(color: darkColorScheme.onSurface),
         ),
-
         cardTheme: CardThemeData(
           color: darkColorScheme.onSecondary,
           elevation: 2,
@@ -548,7 +533,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ),
           shadowColor: darkColorScheme.onSecondary,
         ),
-
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: darkColorScheme.surface,
           selectedItemColor: darkColorScheme.primary,
@@ -556,7 +540,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           elevation: 10,
           type: BottomNavigationBarType.fixed,
         ),
-
         bottomSheetTheme: BottomSheetThemeData(
           backgroundColor: Colors.white, // Background color of the sheet
           elevation: 8.0, // Shadow effect
@@ -571,7 +554,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           clipBehavior: Clip.antiAlias, // Ensures smooth clipping
           shadowColor: Colors.black54, // Shadow color
         ),
-
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: ZoomPageTransitionsBuilder(),

@@ -105,7 +105,7 @@ class FixtureItem extends StatelessWidget {
                     Row(
                       children: [
                         CustomImage(
-                          imageString: match.awayId ?? '',
+                          imageString: match.awayTeamLogo ?? '',
                           height: 16,
                           width: 16,
                         ),
@@ -139,7 +139,7 @@ class FixtureItem extends StatelessWidget {
                     constraints: const BoxConstraints(), // Prevent extra space
                   ),
                   const SizedBox(width: 8),
-                  Column(
+                  /*Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment:
                         CrossAxisAlignment.end, // Align odds to right
@@ -156,7 +156,7 @@ class FixtureItem extends StatelessWidget {
                             : "-",
                       ),
                     ],
-                  ),
+                  ),*/
                 ],
               ),
             ],

@@ -131,7 +131,7 @@ class FavoriteMatch extends StatelessWidget {
                     padding: EdgeInsets.zero, // Remove extra padding
                     constraints: BoxConstraints(), // Prevent extra space
                   ),
-                  SizedBox(width: 8),
+                  /*SizedBox(width: 8),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment:
@@ -149,7 +149,7 @@ class FavoriteMatch extends StatelessWidget {
                             : "-",
                       ),
                     ],
-                  ),
+                  ),*/
                 ],
               ),
             ],

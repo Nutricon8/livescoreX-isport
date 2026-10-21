@@ -35,8 +35,7 @@ class LeagueAppbar extends StatelessWidget implements PreferredSizeWidget {
                         borderRadius: BorderRadius.all(Radius.circular(12.0)),
                       ),
                       child: Image.network(
-                        league.logo ?? '',
-
+                        'https://isport-api-production.up.railway.app/api/isports/image?url=${Uri.encodeComponent(league.logo ?? '')}',
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           return Icon(

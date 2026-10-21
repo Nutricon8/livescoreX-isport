@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 // Define color constants
 const Color lightGreenColor = Color(0xFF1F9C20);
 const Color redColor = Color(0xFFD90D2D);
-const Color yellowColor = Color.fromARGB(255, 245, 223, 22);
+const Color yellowColor = Color(0xffc6b40e);
 const Color greenColor = Color(0xFF46A56C);
 const Color blueColor = Color(0xFF0437F2);
 
 // Light Theme Colors
 const Color kLightBackground = Color(0xFFFFFFFF);
 const Color kLightPrimary = Color(0xFFC94038);
-const Color kLightAccent = Color(0xFFFFC107);
+const Color kLightAccent = Color(0xffefb70e);
 const Color kLightSurface = Color(0xFFF5F5F5);
 const Color kLightText = Color(0xFF18181B);
 

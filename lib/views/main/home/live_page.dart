@@ -9,6 +9,7 @@ import 'package:livescorex/utils/models/league.dart';
 import 'package:livescorex/utils/models/match.dart';
 import 'package:livescorex/utils/notification_manager.dart';
 import 'package:livescorex/widgets/custom_drawer.dart';
+import 'package:livescorex/widgets/custom_image.dart';
 import 'package:livescorex/widgets/live_item.dart';
 
 import 'league_details_screen.dart';
@@ -21,8 +22,7 @@ class LivePage extends StatefulWidget {
   LivePageState createState() => LivePageState();
 }
 
-class LivePageState extends State<LivePage>
-    with AutomaticKeepAliveClientMixin {
+class LivePageState extends State<LivePage> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -115,8 +115,18 @@ class LivePageState extends State<LivePage>
   // --- Priority leagues ----------------------------------------------------
 
   Future<List<String>> loadLeagueIds() async {
-    // TODO: replace with your real source.
-    return <String>[];
+    try {
+      final leagues = await ApiService().getLeagues();
+      debugPrint('FETCH: got ${leagues.length} leagues');
+
+      return leagues
+          .map((l) => l.leagueId)
+          .where((id) => id.isNotEmpty)
+          .toList();
+    } catch (e, st) {
+      debugPrint('loadLeagueIds error: $e\n$st');
+      return <String>[];
+    }
   }
 
   // --- Auto refresh --------------------------------------------------------
@@ -175,7 +185,7 @@ class LivePageState extends State<LivePage>
       if (bIsPriority) return 1;
 
       final countryCompare =
-      (aMatch.location ?? '').compareTo(bMatch.location ?? '');
+          (aMatch.location ?? '').compareTo(bMatch.location ?? '');
       if (countryCompare != 0) return countryCompare;
 
       return (aMatch.leagueName ?? '').compareTo(bMatch.leagueName ?? '');
@@ -299,58 +309,75 @@ class LivePageState extends State<LivePage>
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: entries.isEmpty
-            ? [
-          const SliverFillRemaining(
-            child: Center(child: Text('No matches available')),
-          ),
-        ]
-            : [
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                if (index > 0 && index % 6 == 0) {
-                  return BannerAdWidget();
-                }
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: entries.isEmpty
+                  ? [
+                      const SliverFillRemaining(
+                        child: Center(child: Text('No matches available')),
+                      ),
+                    ]
+                  : [
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            if (index > 0 && index % 6 == 0) {
+                              return BannerAdWidget();
+                            }
 
-                final adCount = index ~/ 6;
-                final realIndex = index - adCount;
-                if (realIndex >= entries.length) {
-                  return const SizedBox.shrink();
-                }
+                            final adCount = index ~/ 6;
+                            final realIndex = index - adCount;
+                            if (realIndex >= entries.length) {
+                              return const SizedBox.shrink();
+                            }
 
-                final entry = entries.elementAt(realIndex);
+                            final entry = entries.elementAt(realIndex);
 
-                return _buildMatchesTab(
-                  context,
-                  entry.value,
-                  favoriteMatchIds,
-                  toggleFavorite,
-                  rewardedAdHelper,
-                  _openLeagueDetails,
-                );
-              },
-              childCount: entries.length + (entries.length ~/ 6),
+                            return _buildMatchesTab(
+                              context,
+                              entry.value,
+                              _allLeagues,
+                              favoriteMatchIds,
+                              toggleFavorite,
+                              rewardedAdHelper,
+                              _openLeagueDetails,
+                            );
+                          },
+                          childCount: entries.length + (entries.length ~/ 6),
+                        ),
+                      ),
+                    ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
 
 Widget _buildMatchesTab(
-    BuildContext context,
-    List<Match> matches,
-    List<String> favoriteMatchIds,
-    Function(Match) toggleFavorite,
-    RewardedAdHelper rewardedAdHelper,
-    void Function(Match) onLeagueTap,
-    ) {
+  BuildContext context,
+  List<Match> matches,
+  List<League> leagues,
+  List<String> favoriteMatchIds,
+  Function(Match) toggleFavorite,
+  RewardedAdHelper rewardedAdHelper,
+  void Function(Match) onLeagueTap,
+) {
   if (matches.isEmpty) return const SizedBox.shrink();
 
   final first = matches.first;
+
+  // Find the league with the same ID, or create a fallback if not found
+  final League league = leagues.firstWhere(
+    (l) => l.leagueId == first.leagueId,
+    orElse: () => League(
+      leagueId: first.leagueId,
+      name: first.leagueName ?? first.leagueShortName ?? 'Unknown League',
+      shortName: first.leagueShortName,
+      logo: null,
+      color: first.leagueColor,
+      country: first.location,
+      subLeagueId: first.subLeagueId,
+      subLeagueName: first.subLeagueName,
+    ),
+  );
 
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
@@ -365,6 +392,11 @@ Widget _buildMatchesTab(
             padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
             child: Row(
               children: [
+                CustomImage(
+                  imageString: league.logo ?? '',
+                  height: 16,
+                  width: 16,
+                ),
                 if ((first.location ?? '').isNotEmpty) ...[
                   Text(
                     '${first.location} · ',
@@ -401,12 +433,14 @@ Widget _buildMatchesTab(
           itemCount: matches.length,
           itemBuilder: (context, index) {
             final match = matches[index];
-            return LiveItem(
-              match: match,
-              isFavorite: favoriteMatchIds.contains(match.matchId),
-              onFavoriteToggle: toggleFavorite,
-              rewardedAdHelper: rewardedAdHelper,
-            );
+            if ([1, 2, 3, 4, 5].contains(match.status)) {
+              return LiveItem(
+                match: match,
+                isFavorite: favoriteMatchIds.contains(match.matchId),
+                onFavoriteToggle: toggleFavorite,
+                rewardedAdHelper: rewardedAdHelper,
+              );
+            }
           },
         ),
       ],

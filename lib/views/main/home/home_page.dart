@@ -5,8 +5,11 @@ import 'package:livescorex/utils/ads/interstitial.dart';
 import 'package:livescorex/utils/ads/rewarded.dart';
 import 'package:livescorex/utils/api_service.dart';
 import 'package:livescorex/utils/favorite_matches.dart';
+import 'package:livescorex/utils/models/league.dart';
 import 'package:livescorex/utils/models/match.dart';
+import 'package:livescorex/views/main/home/league_details_screen.dart';
 import 'package:livescorex/widgets/custom_drawer.dart';
+import 'package:livescorex/widgets/custom_image.dart';
 import 'package:livescorex/widgets/fixture_item.dart';
 import 'package:livescorex/widgets/live_item.dart';
 import '../../../widgets/DateScrollWidget.dart';
@@ -36,6 +39,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   bool isLoading = true;
   String selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+  // Cache the full League list once so we can look up logos etc. when tapped.
+  List<League> _allLeagues = [];
+
   @override
   void initState() {
     super.initState();
@@ -62,11 +68,51 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   // --- Priority leagues ----------------------------------------------------
 
   Future<List<String>> loadLeagueIds() async {
-    // TODO: plug in your real source. Must return league IDs as strings.
-    // Example:
-    // final prefs = await SharedPreferences.getInstance();
-    // return prefs.getStringList('priorityLeagueIds') ?? <String>[];
-    return <String>[];
+    try {
+      final leagues = await ApiService().getLeagues();
+      debugPrint('FETCH: got ${leagues.length} leagues');
+
+      _allLeagues = leagues;
+
+      return leagues
+          .map((l) => l.leagueId)
+          .where((id) => id.isNotEmpty)
+          .toList();
+    } catch (e, st) {
+      debugPrint('loadLeagueIds error: $e\n$st');
+      return <String>[];
+    }
+  }
+
+  League _leagueFromMatch(Match match) {
+    /*final leagues = ApiService().getLeagues();
+    // Try the cache first.
+    for (final l in leagues) {
+      if (l.leagueId == match.leagueId) return l;
+    }*/
+
+    // Fallback — build a partial League in-place.
+    // Only the fields used by LeagueDetailsScreen / LeagueAppbar matter.
+    return League(
+      leagueId: match.leagueId,
+      name: match.leagueName ?? match.leagueShortName ?? '',
+      shortName: match.leagueShortName,
+      logo: null,
+      color: match.leagueColor,
+      country: match.location,
+      subLeagueId: match.subLeagueId,
+      subLeagueName: match.subLeagueName,
+    );
+  }
+
+  void _openLeagueDetails(/*Match first*/ League league) {
+    //final league = _leagueFromMatch(first);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LeagueDetailsScreen(league: league),
+      ),
+    );
   }
 
   // --- Favorites -----------------------------------------------------------
@@ -150,7 +196,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
       // Alphabetical by country (Match.location), then league name.
       final countryCompare =
-      (aMatch.location ?? '').compareTo(bMatch.location ?? '');
+          (aMatch.location ?? '').compareTo(bMatch.location ?? '');
       if (countryCompare != 0) return countryCompare;
 
       return (aMatch.leagueName ?? '').compareTo(bMatch.leagueName ?? '');
@@ -189,7 +235,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
     debugPrint(
       'BUILD: loading=$isLoading grouped=${groupedMatches.length} '
-          'selected=$selectedLeague entries=${entries.length}',
+      'selected=$selectedLeague entries=${entries.length}',
     );
 
     return Scaffold(
@@ -240,68 +286,144 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-        onRefresh: fetchMatches,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: entries.isEmpty
-              ? [
-            const SliverFillRemaining(
-              child: Center(child: Text('No matches available')),
-            ),
-          ]
-              : [
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  // Insert a banner ad every 6 league groups.
-                  if (index > 0 && index % 6 == 0) {
-                    return BannerAdWidget();
-                  }
+              onRefresh: fetchMatches,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: entries.isEmpty
+                    ? [
+                        const SliverFillRemaining(
+                          child: Center(child: Text('No matches available')),
+                        ),
+                      ]
+                    : [
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              // Insert a banner ad every 6 league groups.
+                              if (index > 0 && index % 6 == 0) {
+                                return BannerAdWidget();
+                              }
 
-                  // Skip ad slots when mapping back to entry index.
-                  final adCount = index ~/ 6;
-                  final realIndex = index - adCount;
-                  if (realIndex >= entries.length) {
-                    return const SizedBox.shrink();
-                  }
+                              // Skip ad slots when mapping back to entry index.
+                              final adCount = index ~/ 6;
+                              final realIndex = index - adCount;
+                              if (realIndex >= entries.length) {
+                                return const SizedBox.shrink();
+                              }
 
-                  final entry = entries.elementAt(realIndex);
+                              final entry = entries.elementAt(realIndex);
 
-                  return _buildMatchesTab(
-                    context,
-                    entry.value,
-                    favoriteMatchIds,
-                    toggleFavorite,
-                    adHelper,
-                    rewardedAdHelper,
-                  );
-                },
-                childCount:
-                entries.length + (entries.length ~/ 6),
+                              return _buildMatchesTab(
+                                context,
+                                entry.value,
+                                _allLeagues,
+                                favoriteMatchIds,
+                                toggleFavorite,
+                                adHelper,
+                                rewardedAdHelper,
+                                _openLeagueDetails,
+                              );
+                            },
+                            childCount: entries.length + (entries.length ~/ 6),
+                          ),
+                        ),
+                      ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
 
 Widget _buildMatchesTab(
-    BuildContext context,
-    List<Match> matches,
-    List<String> favoriteMatchIds,
-    Function(Match) toggleFavorite,
-    InterstitialAdHelper adHelper,
-    RewardedAdHelper rewardedAdHelper,
-    ) {
+  BuildContext context,
+  List<Match> matches,
+  List<League> leagues,
+  List<String> favoriteMatchIds,
+  Function(Match) toggleFavorite,
+  InterstitialAdHelper adHelper,
+  RewardedAdHelper rewardedAdHelper,
+  void Function(League) onLeagueTap,
+) {
   if (matches.isEmpty) return const SizedBox.shrink();
+
+  final first = matches.first;
+
+  // Find the league with the same ID, or create a fallback if not found
+  final League league = leagues.firstWhere(
+    (l) => l.leagueId == first.leagueId,
+    orElse: () => League(
+      leagueId: first.leagueId,
+      name: first.leagueName ?? first.leagueShortName ?? 'Unknown League',
+      shortName: first.leagueShortName,
+      logo: null,
+      color: first.leagueColor,
+      country: first.location,
+      subLeagueId: first.subLeagueId,
+      subLeagueName: first.subLeagueName,
+    ),
+  );
 
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ---- Tappable league header ----
+        InkWell(
+          onTap: () => onLeagueTap(league),
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
+            child: Row(
+              children: [
+                //if ((first.location ?? '').isNotEmpty) ...[
+                CustomImage(
+                  imageString: league.countryLogo ?? '',
+                  height: 16,
+                  width: 16,
+                ),
+                SizedBox(
+                  width: 8,
+                ),
+                Text(
+                  '${league.country} · ',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+                SizedBox(
+                  width: 16,
+                ),
+                //],
+                CustomImage(
+                  imageString: league.logo ?? '',
+                  height: 24,
+                  width: 24,
+                ),
+                SizedBox(
+                  width: 8,
+                ),
+                Expanded(
+                  child: Text(
+                    first.leagueName ?? first.leagueShortName ?? 'League',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+            ),
+          ),
+        ),
+
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

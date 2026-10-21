@@ -117,8 +117,10 @@ class Match {
       awayName: json['awayName'] as String?,
       homeScore: json['homeScore'] as int?,
       awayScore: json['awayScore'] as int?,
-      homeTeamLogo: _resolveLogo(json['homeTeamLogo'] as String?),
-      awayTeamLogo: _resolveLogo(json['awayTeamLogo'] as String?),
+      homeTeamLogo: json['homeTeamLogo']
+          as String?, //_resolveLogo(json['homeTeamLogo'] as String?),
+      awayTeamLogo: json['awayTeamLogo']
+          as String?, //_resolveLogo(json['awayTeamLogo'] as String?),
       homeHalfScore: json['homeHalfScore'] as int?,
       awayHalfScore: json['awayHalfScore'] as int?,
       homeRed: json['homeRed'] as int?,

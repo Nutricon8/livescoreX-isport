@@ -40,10 +40,9 @@ class ProfileScreen extends StatelessWidget {
         title: const Text('Profile'),
         centerTitle: true,
       ),
-      body:
-          user == null
-              ? _buildSignUpUI(context)
-              : _buildProfileUI(context, user),
+      body: user == null
+          ? _buildSignUpUI(context)
+          : _buildProfileUI(context, user),
     );
   }
 
@@ -96,11 +95,10 @@ class ProfileScreen extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 32.5,
-                backgroundImage:
-                    photoUrl != null
-                        ? NetworkImage(photoUrl)
-                        : const AssetImage('assets/default_avatar.png')
-                            as ImageProvider,
+                backgroundImage: photoUrl != null
+                    ? NetworkImage(photoUrl)
+                    : const AssetImage('assets/default_avatar.png')
+                        as ImageProvider,
               ),
               const SizedBox(width: 10),
               Column(
@@ -170,16 +168,15 @@ class ProfileScreen extends StatelessWidget {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder:
-                          (context) => RemoveTeamBottomSheet(
-                            onConfirm: () async {
-                              await FirebaseAuth.instance.currentUser?.delete();
-                              Navigator.pushReplacementNamed(
-                                context,
-                                "/register",
-                              );
-                            },
-                          ),
+                      builder: (context) => RemoveTeamBottomSheet(
+                        onConfirm: () async {
+                          await FirebaseAuth.instance.currentUser?.delete();
+                          Navigator.pushReplacementNamed(
+                            context,
+                            "/register",
+                          );
+                        },
+                      ),
                     );
                   },
                   child: Text(

@@ -46,7 +46,7 @@ class FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -80,7 +80,6 @@ class FavoritesScreenState extends State<FavoritesScreen> {
             ),
           ),
         ),
-
         body: TabBarView(
           children: [
             _buildMatchesTab(context),
@@ -106,16 +105,15 @@ class FavoritesScreenState extends State<FavoritesScreen> {
           Match match = _savedMatches[index];
           return FavoriteMatch(
             match: match,
-            onRemove:
-                () async => {
-                  //Match match
-                  await deleteMatch(match.matchId), // Remove from storage
-                  setState(() {
-                    _savedMatches.removeWhere(
-                      (m) => m.matchId == match.matchId,
-                    ); // Remove from UI
-                  }),
-                },
+            onRemove: () async => {
+              //Match match
+              await deleteMatch(match.matchId), // Remove from storage
+              setState(() {
+                _savedMatches.removeWhere(
+                  (m) => m.matchId == match.matchId,
+                ); // Remove from UI
+              }),
+            },
           );
         },
       ),
@@ -148,15 +146,14 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                 Team team = _savedTeams[index];
                 return FavoriteTeam(
                   team: team,
-                  onRemove:
-                      () async => {
-                        await deleteTeam(team.teamId),
-                        setState(() {
-                          _savedTeams.removeWhere(
-                            (t) => t.teamId == team.teamId,
-                          );
-                        }),
-                      },
+                  onRemove: () async => {
+                    await deleteTeam(team.teamId),
+                    setState(() {
+                      _savedTeams.removeWhere(
+                        (t) => t.teamId == team.teamId,
+                      );
+                    }),
+                  },
                 );
               },
             ),
@@ -192,15 +189,14 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                 League league = _savedCompetitions[index];
                 return FavoriteLeague(
                   league: league,
-                  onRemove:
-                      () async => {
-                        await deleteLeague(league.leagueId),
-                        setState(() {
-                          _savedCompetitions.removeWhere(
-                            (l) => l.leagueId == league.leagueId,
-                          );
-                        }),
-                      },
+                  onRemove: () async => {
+                    await deleteLeague(league.leagueId),
+                    setState(() {
+                      _savedCompetitions.removeWhere(
+                        (l) => l.leagueId == league.leagueId,
+                      );
+                    }),
+                  },
                 );
               },
             ),
